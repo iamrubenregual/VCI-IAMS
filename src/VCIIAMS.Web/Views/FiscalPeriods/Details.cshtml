@@ -105,20 +105,26 @@
                 <h5 class="mb-0"><i class="bi bi-calendar-week"></i> Quick Stats</h5>
             </div>
             <div class="card-body">
+                @{
+                    var periods = ViewBag.FiscalPeriods as IEnumerable<FiscalPeriod>;
+                    var totalPeriods = periods?.Count() ?? 0;
+                    var openPeriods = periods?.Count(p => !p.IsClosed) ?? 0;
+                    var closedPeriods = periods?.Count(p => p.IsClosed) ?? 0;
+                }
                 <dl class="row mb-0">
                     <dt class="col-7">Total Periods:</dt>
                     <dd class="col-5 text-end">
-                        <span class="badge bg-primary">@ViewBag.FiscalPeriods.Count()</span>
+                        <span class="badge bg-primary">@totalPeriods</span>
                     </dd>
 
                     <dt class="col-7">Open Periods:</dt>
                     <dd class="col-5 text-end">
-                        <span class="badge bg-success">@ViewBag.FiscalPeriods.Count(p => !p.IsClosed)</span>
+                        <span class="badge bg-success">@openPeriods</span>
                     </dd>
 
                     <dt class="col-7">Closed Periods:</dt>
                     <dd class="col-5 text-end">
-                        <span class="badge bg-secondary">@ViewBag.FiscalPeriods.Count(p => p.IsClosed)</span>
+                        <span class="badge bg-secondary">@closedPeriods</span>
                     </dd>
                 </dl>
             </div>
@@ -134,7 +140,10 @@
                 <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Fiscal Periods</h5>
             </div>
             <div class="card-body">
-                @if (ViewBag.FiscalPeriods != null && ((IEnumerable<FiscalPeriod>)ViewBag.FiscalPeriods).Any())
+                @{
+                    var fiscalPeriods = ViewBag.FiscalPeriods as IEnumerable<FiscalPeriod>;
+                }
+                @if (fiscalPeriods != null && fiscalPeriods.Any())
                 {
                     <div class="table-responsive">
                         <table class="table table-hover table-striped">
@@ -152,7 +161,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var period in (IEnumerable<FiscalPeriod>)ViewBag.FiscalPeriods)
+                                @foreach (var period in fiscalPeriods)
                                 {
                                     <tr>
                                         <td>@period.PeriodNumber</td>

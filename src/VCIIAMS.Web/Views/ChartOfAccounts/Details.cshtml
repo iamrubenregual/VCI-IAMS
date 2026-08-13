@@ -190,10 +190,13 @@
                 <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Child Accounts</h5>
             </div>
             <div class="card-body">
-                @if (ViewBag.ChildAccounts != null && ((IEnumerable<ChartOfAccount>)ViewBag.ChildAccounts).Any())
+                @{
+                    var childAccounts = ViewBag.ChildAccounts as IEnumerable<ChartOfAccount>;
+                }
+                @if (childAccounts != null && childAccounts.Any())
                 {
                     <div class="list-group list-group-flush">
-                        @foreach (var child in (IEnumerable<ChartOfAccount>)ViewBag.ChildAccounts)
+                        @foreach (var child in childAccounts)
                         {
                             <a asp-action="Details" asp-route-id="@child.AccountId"
                                class="list-group-item list-group-item-action">
