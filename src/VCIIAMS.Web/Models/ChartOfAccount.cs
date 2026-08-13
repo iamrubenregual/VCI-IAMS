@@ -70,14 +70,38 @@ namespace VCIIAMS.Web.Models
 
         public virtual ICollection<ChartOfAccount>? ChildAccounts { get; set; }
 
-        // Additional properties for display
+        // Additional properties for display (populated by stored procedures and views)
         [NotMapped]
         public string? ParentAccountName { get; set; }
+
+        [NotMapped]
+        public string? ParentAccountCode { get; set; }
 
         [NotMapped]
         public string? AccountTypeName { get; set; }
 
         [NotMapped]
+        public string? TypeName { get; set; } // Alias for AccountTypeName
+
+        [NotMapped]
+        public string? TypeCode { get; set; }
+
+        [NotMapped]
+        public string? Category { get; set; }
+
+        [NotMapped]
+        public string? NormalBalance { get; set; }
+
+        [NotMapped]
+        public string? DepartmentName { get; set; }
+
+        [NotMapped]
+        public string? DepartmentCode { get; set; }
+
+        [NotMapped]
         public string? HierarchyPath { get; set; }
+
+        [NotMapped]
+        public bool HasTransactions { get; set; }
     }
 }

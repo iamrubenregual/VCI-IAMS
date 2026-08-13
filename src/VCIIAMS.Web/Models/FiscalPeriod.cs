@@ -67,12 +67,24 @@ namespace VCIIAMS.Web.Models
         [ForeignKey("FiscalYearId")]
         public virtual FiscalYear? FiscalYear { get; set; }
 
-        // Display properties
+        // Display properties (populated by stored procedures and views)
         [NotMapped]
         public string StatusDisplay => IsClosed ? "Closed" : "Open";
 
         [NotMapped]
         public string? FiscalYearName { get; set; }
+
+        [NotMapped]
+        public string? FiscalYearCode { get; set; }
+
+        [NotMapped]
+        public bool YearIsClosed { get; set; }
+
+        [NotMapped]
+        public string? YearStatus { get; set; }
+
+        [NotMapped]
+        public string? PeriodStatus { get; set; }
 
         [NotMapped]
         public int DaysInPeriod => (EndDate - StartDate).Days + 1;
