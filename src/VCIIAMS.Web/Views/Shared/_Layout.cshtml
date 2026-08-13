@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - VCI-IAMS</title>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="/" class="sidebar-brand">
+                <i class="bi bi-building"></i>
+                <span class="brand-text">VCI-IAMS</span>
+            </a>
+            <button class="sidebar-toggle" onclick="toggleSidebar()">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
+
+        <nav>
+            <ul class="sidebar-menu">
+                <li class="menu-section">MAIN</li>
+                <li>
+                    <a href="/" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                        <i class="bi bi-speedometer2"></i>
+                        <span class="menu-text">Dashboard</span>
+                    </a>
+                </li>
+
+                <li class="menu-section">ACCOUNTING</li>
+                <li>
+                    <a href="/ChartOfAccounts" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "ChartOfAccounts" ? "active" : "")">
+                        <i class="bi bi-list-ul"></i>
+                        <span class="menu-text">Chart of Accounts</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/FiscalPeriods" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "FiscalPeriods" ? "active" : "")">
+                        <i class="bi bi-calendar-range"></i>
+                        <span class="menu-text">Fiscal Periods</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" style="opacity: 0.5; cursor: not-allowed;">
+                        <i class="bi bi-journal-text"></i>
+                        <span class="menu-text">Journal Entries</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" style="opacity: 0.5; cursor: not-allowed;">
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span class="menu-text">Reports</span>
+                    </a>
+                </li>
+
+                <li class="menu-section">PHASE 2 & 3</li>
+                <li>
+                    <a href="#" style="opacity: 0.5; cursor: not-allowed;">
+                        <i class="bi bi-box-seam"></i>
+                        <span class="menu-text">Inventory</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" style="opacity: 0.5; cursor: not-allowed;">
+                        <i class="bi bi-people"></i>
+                        <span class="menu-text">HR & Payroll</span>
+                    </a>
+                </li>
+
+                <li class="menu-section">SYSTEM</li>
+                <li>
+                    <a href="#" style="opacity: 0.5; cursor: not-allowed;">
+                        <i class="bi bi-gear"></i>
+                        <span class="menu-text">Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <h1 class="page-title">@ViewData["Title"]</h1>
+            <div class="top-bar-actions">
+                <div class="user-menu">
+                    <div class="user-avatar">A</div>
+                    <span style="font-weight: 500;">Admin</span>
+                    <i class="bi bi-chevron-down"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Messages -->
+        <div class="content-wrapper">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i>
+                    <span>@TempData["Success"]</span>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span>@TempData["Error"]</span>
+                </div>
+            }
+            @if (TempData["Warning"] != null)
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <span>@TempData["Warning"]</span>
+                </div>
+            }
+            @if (TempData["Info"] != null)
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <span>@TempData["Info"]</span>
+                </div>
+            }
+
+            <!-- Page Content -->
+            @RenderBody()
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom JS -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

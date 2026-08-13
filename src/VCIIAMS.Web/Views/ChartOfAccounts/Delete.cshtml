@@ -1,0 +1,106 @@
+@model ChartOfAccount
+
+@{
+    ViewData["Title"] = "Delete Account";
+    ViewData["Breadcrumb"] = $"<li class='breadcrumb-item'><a href='/ChartOfAccounts'>Chart of Accounts</a></li><li class='breadcrumb-item active'>Delete - {Model.AccountCode}</li>";
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Delete Account Confirmation</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Warning!</strong> You are about to delete this account. This action will mark the account as inactive.
+                </div>
+
+                <h5 class="mb-3">Are you sure you want to delete this account?</h5>
+
+                <dl class="row">
+                    <dt class="col-sm-4">Account Code:</dt>
+                    <dd class="col-sm-8">
+                        <strong>@Model.AccountCode</strong>
+                    </dd>
+
+                    <dt class="col-sm-4">Account Name:</dt>
+                    <dd class="col-sm-8">@Model.AccountName</dd>
+
+                    <dt class="col-sm-4">Account Type:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-info">@Model.TypeName</span>
+                    </dd>
+
+                    <dt class="col-sm-4">Category:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Category == "ASSET")
+                        {
+                            <span class="badge bg-success">Asset</span>
+                        }
+                        else if (Model.Category == "LIABILITY")
+                        {
+                            <span class="badge bg-danger">Liability</span>
+                        }
+                        else if (Model.Category == "EQUITY")
+                        {
+                            <span class="badge bg-primary">Equity</span>
+                        }
+                        else if (Model.Category == "REVENUE")
+                        {
+                            <span class="badge bg-success">Revenue</span>
+                        }
+                        else if (Model.Category == "EXPENSE")
+                        {
+                            <span class="badge bg-warning">Expense</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Is Header:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsHeader)
+                        {
+                            <span class="badge bg-warning">Yes (Has Child Accounts)</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">No</span>
+                        }
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <dt class="col-sm-4">Description:</dt>
+                        <dd class="col-sm-8">@Model.Description</dd>
+                    }
+                </dl>
+
+                <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Note:</strong> This is a soft delete. The account will be marked as inactive but data will be preserved for audit purposes.
+                </div>
+
+                <form asp-action="Delete" method="post">
+                    <input asp-for="AccountId" type="hidden" />
+
+                    <hr />
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <div>
+                            <a asp-action="Details" asp-route-id="@Model.AccountId" class="btn btn-outline-info">
+                                <i class="bi bi-eye"></i> View Details
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Confirm Delete
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

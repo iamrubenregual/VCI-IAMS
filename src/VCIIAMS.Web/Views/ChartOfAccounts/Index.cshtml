@@ -1,0 +1,208 @@
+@model IEnumerable<ChartOfAccount>
+
+@{
+    ViewData["Title"] = "Chart of Accounts";
+    ViewData["Breadcrumb"] = "<li class='breadcrumb-item active'>Chart of Accounts</li>";
+}
+
+<div class="row mb-3">
+    <div class="col-md-8">
+        <h2><i class="bi bi-list-ul"></i> Chart of Accounts</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create New Account
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Account Type</label>
+                <select name="accountTypeId" class="form-select">
+                    <option value="">All Types</option>
+                    @if (ViewBag.AccountTypes != null)
+                    {
+                        @foreach (var item in ViewBag.AccountTypes)
+                        {
+                            <option value="@item.Value" selected="@(item.Value == ViewBag.AccountTypeId?.ToString())">
+                                @item.Text
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <div class="form-check form-switch mt-2">
+                    <input class="form-check-input" type="checkbox" name="includeInactive"
+                           id="includeInactive" value="true" @(ViewBag.IncludeInactive ? "checked" : "")>
+                    <label class="form-check-label" for="includeInactive">
+                        Include Inactive Accounts
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Accounts Table -->
+<div class="card">
+    <div class="card-body">
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover table-striped" id="accountsTable">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Account Code</th>
+                            <th>Account Name</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th class="text-center">Header</th>
+                            <th class="text-end">Opening Balance</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var account in Model)
+                        {
+                            <tr class="@(account.IsHeader ? "table-light fw-bold" : "")">
+                                <td>
+                                    @if (account.IsHeader)
+                                    {
+                                        <i class="bi bi-folder"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-file-text"></i>
+                                    }
+                                    @account.AccountCode
+                                </td>
+                                <td>
+                                    @if (account.Level > 1)
+                                    {
+                                        <span class="text-muted">@string.Join("", Enumerable.Repeat("  ", account.Level - 1))</span>
+                                    }
+                                    @account.AccountName
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@account.TypeName</span>
+                                </td>
+                                <td>
+                                    @if (account.Category == "ASSET")
+                                    {
+                                        <span class="badge bg-success">Asset</span>
+                                    }
+                                    else if (account.Category == "LIABILITY")
+                                    {
+                                        <span class="badge bg-danger">Liability</span>
+                                    }
+                                    else if (account.Category == "EQUITY")
+                                    {
+                                        <span class="badge bg-primary">Equity</span>
+                                    }
+                                    else if (account.Category == "REVENUE")
+                                    {
+                                        <span class="badge bg-success">Revenue</span>
+                                    }
+                                    else if (account.Category == "EXPENSE")
+                                    {
+                                        <span class="badge bg-warning">Expense</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (account.IsHeader)
+                                    {
+                                        <i class="bi bi-check-circle text-success"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-x-circle text-muted"></i>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (!account.IsHeader)
+                                    {
+                                        @account.OpeningBalance.ToString("N2")
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (account.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-action="Details" asp-route-id="@account.AccountId"
+                                           class="btn btn-outline-info" title="Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@account.AccountId"
+                                           class="btn btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@account.AccountId"
+                                           class="btn btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-3">
+                <p class="text-muted">
+                    <i class="bi bi-info-circle"></i>
+                    Showing <strong>@Model.Count()</strong> account(s).
+                    <i class="bi bi-folder ms-3"></i> = Header Account |
+                    <i class="bi bi-file-text"></i> = Detail Account
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info" role="alert">
+                <i class="bi bi-info-circle"></i>
+                No accounts found. <a asp-action="Create" class="alert-link">Create your first account</a>.
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Add search functionality
+            $('#searchInput').on('keyup', function () {
+                var value = $(this).val().toLowerCase();
+                $('#accountsTable tbody tr').filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+    </script>
+}

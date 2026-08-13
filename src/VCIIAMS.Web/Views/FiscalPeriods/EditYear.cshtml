@@ -1,0 +1,87 @@
+@model FiscalYear
+
+@{
+    ViewData["Title"] = "Edit Fiscal Year";
+    ViewData["Breadcrumb"] = $"<li class='breadcrumb-item'><a href='/FiscalPeriods'>Fiscal Years</a></li><li class='breadcrumb-item active'>Edit - {Model.FiscalYearCode}</li>";
+}
+
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-pencil"></i> Edit Fiscal Year: @Model.FiscalYearCode</h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="EditYear" method="post">
+                    <input asp-for="FiscalYearId" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="FiscalYearCode" class="form-label"></label>
+                            <input asp-for="FiscalYearCode" class="form-control" />
+                            <span asp-validation-for="FiscalYearCode" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="FiscalYearName" class="form-label"></label>
+                            <input asp-for="FiscalYearName" class="form-control" />
+                            <span asp-validation-for="FiscalYearName" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="StartDate" class="form-label"></label>
+                            <input asp-for="StartDate" class="form-control" type="date" />
+                            <span asp-validation-for="StartDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EndDate" class="form-label"></label>
+                            <input asp-for="EndDate" class="form-control" type="date" />
+                            <span asp-validation-for="EndDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Metadata -->
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Metadata</h6>
+                            <dl class="row mb-0 small">
+                                <dt class="col-sm-4">Created By:</dt>
+                                <dd class="col-sm-8">@Model.CreatedBy on @Model.CreatedDate.ToString("MMM dd, yyyy hh:mm tt")</dd>
+
+                                @if (!string.IsNullOrEmpty(Model.ModifiedBy))
+                                {
+                                    <dt class="col-sm-4">Last Modified By:</dt>
+                                    <dd class="col-sm-8">@Model.ModifiedBy on @Model.ModifiedDate?.ToString("MMM dd, yyyy hh:mm tt")</dd>
+                                }
+                            </dl>
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to List
+                        </a>
+                        <div>
+                            <a asp-action="Details" asp-route-id="@Model.FiscalYearId" class="btn btn-outline-info">
+                                <i class="bi bi-eye"></i> View Details
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

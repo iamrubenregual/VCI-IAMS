@@ -1,0 +1,246 @@
+@model ChartOfAccount
+
+@{
+    ViewData["Title"] = "Account Details";
+    ViewData["Breadcrumb"] = $"<li class='breadcrumb-item'><a href='/ChartOfAccounts'>Chart of Accounts</a></li><li class='breadcrumb-item active'>{Model.AccountCode}</li>";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-file-text"></i> Account Details</h4>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Account Code:</dt>
+                    <dd class="col-sm-8">
+                        <h5 class="mb-0">
+                            @if (Model.IsHeader)
+                            {
+                                <i class="bi bi-folder text-warning"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-file-text text-info"></i>
+                            }
+                            @Model.AccountCode
+                        </h5>
+                    </dd>
+
+                    <dt class="col-sm-4">Account Name:</dt>
+                    <dd class="col-sm-8"><strong>@Model.AccountName</strong></dd>
+
+                    <dt class="col-sm-4">Account Type:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-info">@Model.TypeName</span>
+                    </dd>
+
+                    <dt class="col-sm-4">Category:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.Category == "ASSET")
+                        {
+                            <span class="badge bg-success">Asset</span>
+                        }
+                        else if (Model.Category == "LIABILITY")
+                        {
+                            <span class="badge bg-danger">Liability</span>
+                        }
+                        else if (Model.Category == "EQUITY")
+                        {
+                            <span class="badge bg-primary">Equity</span>
+                        }
+                        else if (Model.Category == "REVENUE")
+                        {
+                            <span class="badge bg-success">Revenue</span>
+                        }
+                        else if (Model.Category == "EXPENSE")
+                        {
+                            <span class="badge bg-warning">Expense</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Normal Balance:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.NormalBalance == "DEBIT")
+                        {
+                            <span class="badge bg-secondary">Debit</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-dark">Credit</span>
+                        }
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(Model.ParentAccountName))
+                    {
+                        <dt class="col-sm-4">Parent Account:</dt>
+                        <dd class="col-sm-8">
+                            <i class="bi bi-arrow-return-right"></i>
+                            @Model.ParentAccountCode - @Model.ParentAccountName
+                        </dd>
+                    }
+
+                    <dt class="col-sm-4">Level:</dt>
+                    <dd class="col-sm-8">Level @Model.Level</dd>
+
+                    <dt class="col-sm-4">Is Header Account:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsHeader)
+                        {
+                            <span class="badge bg-warning">
+                                <i class="bi bi-check-circle"></i> Yes (Grouping Only)
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-x-circle"></i> No (Detail Account)
+                            </span>
+                        }
+                    </dd>
+
+                    @if (!Model.IsHeader)
+                    {
+                        <dt class="col-sm-4">Opening Balance:</dt>
+                        <dd class="col-sm-8">
+                            <strong>₱ @Model.OpeningBalance.ToString("N2")</strong>
+                            @if (Model.OpeningBalanceDate.HasValue)
+                            {
+                                <small class="text-muted">as of @Model.OpeningBalanceDate?.ToString("MMM dd, yyyy")</small>
+                            }
+                        </dd>
+                    }
+
+                    <dt class="col-sm-4">Allow Manual Entry:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.AllowManualEntry)
+                        {
+                            <i class="bi bi-check-circle text-success"></i> <span class="text-success">Yes</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-x-circle text-danger"></i> <span class="text-danger">No (System Only)</span>
+                        }
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(Model.DepartmentName))
+                    {
+                        <dt class="col-sm-4">Department:</dt>
+                        <dd class="col-sm-8">@Model.DepartmentName</dd>
+                    }
+
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactive</span>
+                        }
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <dt class="col-sm-4">Description:</dt>
+                        <dd class="col-sm-8">@Model.Description</dd>
+                    }
+                </dl>
+
+                <hr />
+
+                <!-- Metadata -->
+                <h6 class="text-muted mb-3">Audit Information</h6>
+                <dl class="row small text-muted">
+                    <dt class="col-sm-4">Created By:</dt>
+                    <dd class="col-sm-8">@Model.CreatedBy on @Model.CreatedDate.ToString("MMM dd, yyyy hh:mm tt")</dd>
+
+                    @if (!string.IsNullOrEmpty(Model.ModifiedBy))
+                    {
+                        <dt class="col-sm-4">Last Modified By:</dt>
+                        <dd class="col-sm-8">@Model.ModifiedBy on @Model.ModifiedDate?.ToString("MMM dd, yyyy hh:mm tt")</dd>
+                    }
+                </dl>
+
+                <hr />
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                    <div>
+                        <a asp-action="Edit" asp-route-id="@Model.AccountId" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.AccountId" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Child Accounts -->
+        <div class="card mb-3">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Child Accounts</h5>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.ChildAccounts != null && ((IEnumerable<ChartOfAccount>)ViewBag.ChildAccounts).Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var child in (IEnumerable<ChartOfAccount>)ViewBag.ChildAccounts)
+                        {
+                            <a asp-action="Details" asp-route-id="@child.AccountId"
+                               class="list-group-item list-group-item-action">
+                                @if (child.IsHeader)
+                                {
+                                    <i class="bi bi-folder"></i>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-file-text"></i>
+                                }
+                                <strong>@child.AccountCode</strong><br />
+                                <small class="text-muted">@child.AccountName</small>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-info-circle"></i> No child accounts
+                    </p>
+                }
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    @if (Model.IsHeader)
+                    {
+                        <a asp-action="Create" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus"></i> Add Child Account
+                        </a>
+                    }
+                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                        <i class="bi bi-graph-up"></i> View Transactions
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                        <i class="bi bi-file-text"></i> Generate Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

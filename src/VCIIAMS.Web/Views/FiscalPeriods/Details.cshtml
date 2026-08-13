@@ -1,0 +1,294 @@
+@model FiscalYear
+
+@{
+    ViewData["Title"] = "Fiscal Year Details";
+    ViewData["Breadcrumb"] = $"<li class='breadcrumb-item'><a href='/FiscalPeriods'>Fiscal Years</a></li><li class='breadcrumb-item active'>{Model.FiscalYearCode}</li>";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header @(Model.IsClosed ? "bg-secondary" : "bg-success") text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-calendar-range"></i> @Model.FiscalYearName
+                    <span class="badge @(Model.IsClosed ? "bg-dark" : "bg-light text-dark") float-end">
+                        @Model.StatusDisplay
+                    </span>
+                </h4>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Fiscal Year Code:</dt>
+                    <dd class="col-sm-8"><h5>@Model.FiscalYearCode</h5></dd>
+
+                    <dt class="col-sm-4">Fiscal Year Name:</dt>
+                    <dd class="col-sm-8"><strong>@Model.FiscalYearName</strong></dd>
+
+                    <dt class="col-sm-4">Start Date:</dt>
+                    <dd class="col-sm-8">@Model.StartDate.ToString("MMMM dd, yyyy")</dd>
+
+                    <dt class="col-sm-4">End Date:</dt>
+                    <dd class="col-sm-8">@Model.EndDate.ToString("MMMM dd, yyyy")</dd>
+
+                    <dt class="col-sm-4">Duration:</dt>
+                    <dd class="col-sm-8">@((Model.EndDate - Model.StartDate).Days + 1) days</dd>
+
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactive</span>
+                        }
+                        @if (Model.IsClosed)
+                        {
+                            <span class="badge bg-dark">Closed</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-info">Open</span>
+                        }
+                    </dd>
+
+                    @if (Model.IsClosed)
+                    {
+                        <dt class="col-sm-4">Closed By:</dt>
+                        <dd class="col-sm-8">
+                            @Model.ClosedBy on @Model.ClosedDate?.ToString("MMMM dd, yyyy hh:mm tt")
+                        </dd>
+                    }
+                </dl>
+
+                <hr />
+
+                <h6 class="text-muted mb-3">Audit Information</h6>
+                <dl class="row small text-muted">
+                    <dt class="col-sm-4">Created By:</dt>
+                    <dd class="col-sm-8">@Model.CreatedBy on @Model.CreatedDate.ToString("MMM dd, yyyy hh:mm tt")</dd>
+
+                    @if (!string.IsNullOrEmpty(Model.ModifiedBy))
+                    {
+                        <dt class="col-sm-4">Last Modified By:</dt>
+                        <dd class="col-sm-8">@Model.ModifiedBy on @Model.ModifiedDate?.ToString("MMM dd, yyyy hh:mm tt")</dd>
+                    }
+                </dl>
+
+                <hr />
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to List
+                    </a>
+                    <div>
+                        @if (!Model.IsClosed)
+                        {
+                            <a asp-action="EditYear" asp-route-id="@Model.FiscalYearId" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-warning"
+                                    onclick="closeFiscalYear(@Model.FiscalYearId, '@Model.FiscalYearName')">
+                                <i class="bi bi-lock"></i> Close Fiscal Year
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-calendar-week"></i> Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-7">Total Periods:</dt>
+                    <dd class="col-5 text-end">
+                        <span class="badge bg-primary">@ViewBag.FiscalPeriods.Count()</span>
+                    </dd>
+
+                    <dt class="col-7">Open Periods:</dt>
+                    <dd class="col-5 text-end">
+                        <span class="badge bg-success">@ViewBag.FiscalPeriods.Count(p => !p.IsClosed)</span>
+                    </dd>
+
+                    <dt class="col-7">Closed Periods:</dt>
+                    <dd class="col-5 text-end">
+                        <span class="badge bg-secondary">@ViewBag.FiscalPeriods.Count(p => p.IsClosed)</span>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fiscal Periods List -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Fiscal Periods</h5>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.FiscalPeriods != null && ((IEnumerable<FiscalPeriod>)ViewBag.FiscalPeriods).Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Period Code</th>
+                                    <th>Period Name</th>
+                                    <th>Type</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Days</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var period in (IEnumerable<FiscalPeriod>)ViewBag.FiscalPeriods)
+                                {
+                                    <tr>
+                                        <td>@period.PeriodNumber</td>
+                                        <td><strong>@period.PeriodCode</strong></td>
+                                        <td>@period.PeriodName</td>
+                                        <td>
+                                            <span class="badge bg-info">@period.PeriodType</span>
+                                        </td>
+                                        <td>@period.StartDate.ToString("MMM dd, yyyy")</td>
+                                        <td>@period.EndDate.ToString("MMM dd, yyyy")</td>
+                                        <td>@period.DaysInPeriod</td>
+                                        <td class="text-center">
+                                            @if (period.IsClosed)
+                                            {
+                                                <span class="badge bg-secondary">Closed</span>
+                                            }
+                                            else if (DateTime.Today >= period.StartDate && DateTime.Today <= period.EndDate)
+                                            {
+                                                <span class="badge bg-success">Current</span>
+                                            }
+                                            else if (DateTime.Today < period.StartDate)
+                                            {
+                                                <span class="badge bg-warning">Upcoming</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info">Past</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (!period.IsClosed && !Model.IsClosed)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-warning"
+                                                        onclick="closePeriod(@period.FiscalPeriodId, '@period.PeriodName', @Model.FiscalYearId)">
+                                                    <i class="bi bi-lock"></i> Close
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">
+                                                    <i class="bi bi-lock-fill"></i> Closed
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-info-circle"></i> No fiscal periods found for this year.
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="closeFiscalYearModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Close Fiscal Year
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to close fiscal year <strong id="fiscalYearName"></strong>?</p>
+                <p class="text-danger">
+                    <i class="bi bi-exclamation-circle"></i>
+                    This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <form id="closeFiscalYearForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-lock"></i> Close Fiscal Year
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="closePeriodModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle"></i> Close Fiscal Period
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to close period <strong id="periodName"></strong>?</p>
+                <p class="text-warning">
+                    <i class="bi bi-info-circle"></i>
+                    Closing a period prevents further transactions in that period.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <form id="closePeriodForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="fiscalYearId" id="fiscalYearIdInput" />
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-lock"></i> Close Period
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function closeFiscalYear(id, name) {
+            $('#fiscalYearName').text(name);
+            $('#closeFiscalYearForm').attr('action', '/FiscalPeriods/CloseYear/' + id);
+            var modal = new bootstrap.Modal(document.getElementById('closeFiscalYearModal'));
+            modal.show();
+        }
+
+        function closePeriod(id, name, fiscalYearId) {
+            $('#periodName').text(name);
+            $('#fiscalYearIdInput').val(fiscalYearId);
+            $('#closePeriodForm').attr('action', '/FiscalPeriods/ClosePeriod/' + id);
+            var modal = new bootstrap.Modal(document.getElementById('closePeriodModal'));
+            modal.show();
+        }
+    </script>
+}
