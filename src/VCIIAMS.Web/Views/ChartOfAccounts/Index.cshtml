@@ -105,26 +105,7 @@
                                     <span class="badge bg-info">@account.TypeName</span>
                                 </td>
                                 <td>
-                                    @if (account.Category == "ASSET")
-                                    {
-                                        <span class="badge bg-success">Asset</span>
-                                    }
-                                    else if (account.Category == "LIABILITY")
-                                    {
-                                        <span class="badge bg-danger">Liability</span>
-                                    }
-                                    else if (account.Category == "EQUITY")
-                                    {
-                                        <span class="badge bg-primary">Equity</span>
-                                    }
-                                    else if (account.Category == "REVENUE")
-                                    {
-                                        <span class="badge bg-success">Revenue</span>
-                                    }
-                                    else if (account.Category == "EXPENSE")
-                                    {
-                                        <span class="badge bg-warning">Expense</span>
-                                    }
+                                    @Html.Raw(VCIIAMS.Web.Services.HelperService.BadgeHelper.CategoryBadge(@account.Category.ToString()))
                                 </td>
                                 <td class="text-center">
                                     @if (account.IsHeader)
