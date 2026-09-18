@@ -21,6 +21,10 @@
     <div class="card-body">
         <form method="get" class="row g-3">
             <div class="col-md-4">
+                <label for="searchInput" class="form-label">Search</label>
+                <input id="searchInput" type="search" class="form-control" placeholder="Code, name, type, or parent" />
+            </div>
+            <div class="col-md-4">
                 <label class="form-label">Account Type</label>
                 <select name="accountTypeId" class="form-select">
                     <option value="">All Types</option>
@@ -35,7 +39,7 @@
                     }
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-2">
                 <label class="form-label">Status</label>
                 <div class="form-check form-switch mt-2">
                     <input class="form-check-input" type="checkbox" name="includeInactive"
@@ -45,7 +49,7 @@
                     </label>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-2">
                 <label class="form-label">&nbsp;</label>
                 <div>
                     <button type="submit" class="btn btn-primary">
@@ -197,7 +201,7 @@
     <script>
         $(document).ready(function () {
             // Add search functionality
-            $('#searchInput').on('keyup', function () {
+            $('#searchInput').on('input', function () {
                 var value = $(this).val().toLowerCase();
                 $('#accountsTable tbody tr').filter(function () {
                     $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)

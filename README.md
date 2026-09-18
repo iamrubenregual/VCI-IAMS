@@ -74,6 +74,12 @@ After running the seed script:
 4. Run `dotnet run` to start the application
 5. Navigate to `https://localhost:5001`
 
+The application now requires sign-in for Chart of Accounts pages. Use the seeded
+administrator account on first setup and change its password before production use.
+For SQL authentication, provide the connection string through the
+`ConnectionStrings__DefaultConnection` environment variable rather than committing
+credentials to `appsettings.json`.
+
 ---
 
 **Project**: VCI-IAMS  

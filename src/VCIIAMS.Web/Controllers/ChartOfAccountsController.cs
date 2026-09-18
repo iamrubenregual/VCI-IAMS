@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Authorization;
 using VCIIAMS.Web.Models;
 using VCIIAMS.Web.Services;
 
 namespace VCIIAMS.Web.Controllers
 {
+    [Authorize]
     public class ChartOfAccountsController : Controller
     {
         private readonly IChartOfAccountService _accountService;
@@ -68,6 +70,7 @@ namespace VCIIAMS.Web.Controllers
         }
 
         // GET: ChartOfAccounts/Create
+        [Authorize(Roles = "System Administrator,Accountant,Finance Manager")]
         public async Task<IActionResult> Create()
         {
             await PopulateDropdowns();
@@ -77,6 +80,7 @@ namespace VCIIAMS.Web.Controllers
         // POST: ChartOfAccounts/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "System Administrator,Accountant,Finance Manager")]
         public async Task<IActionResult> Create(ChartOfAccount account)
         {
             try
@@ -91,8 +95,7 @@ namespace VCIIAMS.Web.Controllers
                         return View(account);
                     }
 
-                    // TODO: Get current user from authentication
-                    var currentUser = "admin"; // Temporary hardcoded user
+                    var currentUser = User.Identity?.Name ?? "unknown";
 
                     var newId = await _accountService.CreateAccountAsync(account, currentUser);
 
@@ -113,6 +116,7 @@ namespace VCIIAMS.Web.Controllers
         }
 
         // GET: ChartOfAccounts/Edit/5
+        [Authorize(Roles = "System Administrator,Accountant,Finance Manager")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -138,6 +142,7 @@ namespace VCIIAMS.Web.Controllers
         // POST: ChartOfAccounts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "System Administrator,Accountant,Finance Manager")]
         public async Task<IActionResult> Edit(int id, ChartOfAccount account)
         {
             if (id != account.AccountId)
@@ -157,8 +162,7 @@ namespace VCIIAMS.Web.Controllers
                         return View(account);
                     }
 
-                    // TODO: Get current user from authentication
-                    var currentUser = "admin"; // Temporary hardcoded user
+                    var currentUser = User.Identity?.Name ?? "unknown";
 
                     var result = await _accountService.UpdateAccountAsync(account, currentUser);
 
@@ -186,6 +190,7 @@ namespace VCIIAMS.Web.Controllers
         }
 
         // GET: ChartOfAccounts/Delete/5
+        [Authorize(Roles = "System Administrator,Finance Manager")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -210,12 +215,12 @@ namespace VCIIAMS.Web.Controllers
         // POST: ChartOfAccounts/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "System Administrator,Finance Manager")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try
             {
-                // TODO: Get current user from authentication
-                var currentUser = "admin"; // Temporary hardcoded user
+                var currentUser = User.Identity?.Name ?? "unknown";
 
                 var result = await _accountService.DeleteAccountAsync(id, currentUser);
 

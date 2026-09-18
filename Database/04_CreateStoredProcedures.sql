@@ -140,12 +140,41 @@ BEGIN
         -- Validate parent account if specified
         IF @ParentAccountId IS NOT NULL
         BEGIN
-            IF NOT EXISTS (SELECT 1 FROM ChartOfAccounts WHERE AccountId = @ParentAccountId AND IsActive = 1)
+            IF NOT EXISTS (SELECT 1 FROM ChartOfAccounts WHERE AccountId = @ParentAccountId AND IsActive = 1 AND IsHeader = 1)
             BEGIN
-                RAISERROR('Parent account does not exist or is inactive.', 16, 1);
+                RAISERROR('Parent account does not exist, is inactive, or is not a header account.', 16, 1);
                 RETURN -2;
             END
+
+            IF EXISTS (
+                SELECT 1 FROM ChartOfAccounts child
+                INNER JOIN AccountTypes childType ON childType.AccountTypeId = @AccountTypeId
+                INNER JOIN ChartOfAccounts parent ON parent.AccountId = @ParentAccountId
+                INNER JOIN AccountTypes parentType ON parentType.AccountTypeId = parent.AccountTypeId
+                WHERE child.AccountId = @ParentAccountId AND childType.Category <> parentType.Category
+            )
+            BEGIN
+                RAISERROR('Parent and child accounts must have compatible account types.', 16, 1);
+                RETURN -3;
+            END
         END
+
+        IF NOT EXISTS (SELECT 1 FROM AccountTypes WHERE AccountTypeId = @AccountTypeId AND IsActive = 1)
+        BEGIN
+            RAISERROR('Account type does not exist or is inactive.', 16, 1);
+            RETURN -4;
+        END
+
+        IF @IsHeader = 1 AND (@AllowManualEntry = 1 OR @OpeningBalance <> 0)
+        BEGIN
+            RAISERROR('Header accounts cannot allow manual entry or have an opening balance.', 16, 1);
+            RETURN -5;
+        END
+
+        IF @ParentAccountId IS NOT NULL
+            SELECT @Level = Level + 1 FROM ChartOfAccounts WHERE AccountId = @ParentAccountId;
+        ELSE
+            SET @Level = 1;
 
         -- Insert new account
         INSERT INTO ChartOfAccounts (
@@ -231,6 +260,77 @@ BEGIN
             RETURN -3;
         END
 
+        IF @ParentAccountId IS NOT NULL
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM ChartOfAccounts WHERE AccountId = @ParentAccountId AND IsActive = 1 AND IsHeader = 1)
+            BEGIN
+                RAISERROR('Parent account does not exist, is inactive, or is not a header account.', 16, 1);
+                RETURN -4;
+            END
+
+            DECLARE @CreatesCycle BIT = 0;
+            ;WITH Ancestors AS
+            (
+                SELECT AccountId, ParentAccountId
+                FROM ChartOfAccounts
+                WHERE AccountId = @ParentAccountId
+                UNION ALL
+                SELECT parent.AccountId, parent.ParentAccountId
+                FROM ChartOfAccounts parent
+                INNER JOIN Ancestors ancestor ON ancestor.ParentAccountId = parent.AccountId
+            )
+            SELECT @CreatesCycle = 1 FROM Ancestors WHERE AccountId = @AccountId;
+
+            IF @CreatesCycle = 1
+            BEGIN
+                RAISERROR('The selected parent would create a circular hierarchy.', 16, 1);
+                RETURN -5;
+            END
+
+            IF EXISTS (
+                SELECT 1
+                FROM ChartOfAccounts parent
+                INNER JOIN AccountTypes parentType ON parentType.AccountTypeId = parent.AccountTypeId
+                INNER JOIN AccountTypes childType ON childType.AccountTypeId = @AccountTypeId
+                WHERE parent.AccountId = @ParentAccountId
+                  AND parentType.Category <> childType.Category
+            )
+            BEGIN
+                RAISERROR('Parent and child accounts must have compatible account types.', 16, 1);
+                RETURN -9;
+            END
+        END
+
+        IF NOT EXISTS (SELECT 1 FROM AccountTypes WHERE AccountTypeId = @AccountTypeId AND IsActive = 1)
+        BEGIN
+            RAISERROR('Account type does not exist or is inactive.', 16, 1);
+            RETURN -6;
+        END
+
+        IF @IsHeader = 1 AND (@AllowManualEntry = 1 OR @OpeningBalance <> 0)
+        BEGIN
+            RAISERROR('Header accounts cannot allow manual entry or have an opening balance.', 16, 1);
+            RETURN -7;
+        END
+
+        IF @IsHeader = 0 AND EXISTS (SELECT 1 FROM ChartOfAccounts WHERE ParentAccountId = @AccountId AND IsActive = 1)
+        BEGIN
+            RAISERROR('An account with active child accounts must remain a header account.', 16, 1);
+            RETURN -8;
+        END
+
+        IF EXISTS (SELECT 1 FROM AccountBalances WHERE AccountId = @AccountId AND (DebitAmount <> 0 OR CreditAmount <> 0))
+           AND EXISTS (SELECT 1 FROM ChartOfAccounts WHERE AccountId = @AccountId AND AccountCode <> @AccountCode)
+        BEGIN
+            RAISERROR('Account code cannot be changed after the account has activity.', 16, 1);
+            RETURN -8;
+        END
+
+        IF @ParentAccountId IS NOT NULL
+            SELECT @Level = Level + 1 FROM ChartOfAccounts WHERE AccountId = @ParentAccountId;
+        ELSE
+            SET @Level = 1;
+
         -- Store old values for audit
         DECLARE @OldValues NVARCHAR(MAX);
         SELECT @OldValues = 'AccountCode: ' + AccountCode + ', AccountName: ' + AccountName
@@ -306,7 +406,11 @@ BEGIN
             RETURN -2;
         END
 
-        -- TODO: Add check for existing transactions when journal entries are implemented
+        IF EXISTS (SELECT 1 FROM AccountBalances WHERE AccountId = @AccountId AND (DebitAmount <> 0 OR CreditAmount <> 0))
+        BEGIN
+            RAISERROR('This account cannot be deleted because it has accounting activity.', 16, 1);
+            RETURN -3;
+        END
 
         -- Soft delete the account
         UPDATE ChartOfAccounts

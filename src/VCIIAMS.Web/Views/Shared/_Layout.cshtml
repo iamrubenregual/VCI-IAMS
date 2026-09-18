@@ -90,11 +90,16 @@
         <div class="top-bar">
             <h1 class="page-title">@ViewData["Title"]</h1>
             <div class="top-bar-actions">
-                <div class="user-menu">
-                    <div class="user-avatar">A</div>
-                    <span style="font-weight: 500;">Admin</span>
-                    <i class="bi bi-chevron-down"></i>
-                </div>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="user-menu">
+                        <div class="user-avatar">@User.Identity.Name?.Substring(0, 1).ToUpperInvariant()</div>
+                        <span style="font-weight: 500;">@User.Identity.Name</span>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="ms-2">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Sign out</button>
+                        </form>
+                    </div>
+                }
             </div>
         </div>
 

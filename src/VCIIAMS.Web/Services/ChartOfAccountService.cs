@@ -105,14 +105,15 @@ namespace VCIIAMS.Web.Services
             parameters.Add("@OpeningBalance", account.OpeningBalance);
             parameters.Add("@OpeningBalanceDate", account.OpeningBalanceDate);
             parameters.Add("@ModifiedBy", modifiedBy);
+            parameters.Add("@ReturnValue", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
 
-            var result = await connection.ExecuteAsync(
+            await connection.ExecuteAsync(
                 "sp_UpdateChartOfAccount",
                 parameters,
                 commandType: CommandType.StoredProcedure
             );
 
-            return result >= 0;
+            return parameters.Get<int>("@ReturnValue") == 0;
         }
 
         public async Task<bool> DeleteAccountAsync(int accountId, string deletedBy)
@@ -121,14 +122,15 @@ namespace VCIIAMS.Web.Services
             var parameters = new DynamicParameters();
             parameters.Add("@AccountId", accountId);
             parameters.Add("@DeletedBy", deletedBy);
+            parameters.Add("@ReturnValue", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
 
-            var result = await connection.ExecuteAsync(
+            await connection.ExecuteAsync(
                 "sp_DeleteChartOfAccount",
                 parameters,
                 commandType: CommandType.StoredProcedure
             );
 
-            return result >= 0;
+            return parameters.Get<int>("@ReturnValue") == 0;
         }
 
         public async Task<IEnumerable<AccountType>> GetAllAccountTypesAsync()
