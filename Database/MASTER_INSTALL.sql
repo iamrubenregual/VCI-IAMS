@@ -225,8 +225,6 @@ PRINT '✓ Functions and views creation completed.';
 PRINT '';
 
 -- =============================================
--- STEP 6: Load Seed Data
--- =============================================
 PRINT '>>> STEP 6: Loading Seed Data...';
 PRINT '';
 
