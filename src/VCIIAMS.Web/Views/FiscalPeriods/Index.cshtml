@@ -42,7 +42,7 @@
 </div>
 
 <!-- Fiscal Years List -->
-<div class="row">
+<div class="row" style="width: 100%;">
     @if (Model != null && Model.Any())
     {
         @foreach (var fiscalYear in Model)
@@ -54,7 +54,7 @@
                             <h5 class="mb-0">
                                 <i class="bi bi-calendar-range"></i> @fiscalYear.FiscalYearName
                             </h5>
-                            <span class="badge @(fiscalYear.IsClosed ? "bg-dark" : "bg-light text-dark")">
+                            <span class="badge @(fiscalYear.IsClosed ? "bg-dark" : "bg-light text-dark")" style="margin-left: 10px">
                                 @fiscalYear.StatusDisplay
                             </span>
                         </div>

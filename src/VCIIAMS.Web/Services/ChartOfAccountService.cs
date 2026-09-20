@@ -74,7 +74,7 @@ namespace VCIIAMS.Web.Services
             parameters.Add("@AllowManualEntry", account.AllowManualEntry);
             parameters.Add("@Level", account.Level);
             parameters.Add("@DepartmentId", account.DepartmentId);
-            parameters.Add("@OpeningBalance", account.OpeningBalance);
+            parameters.Add("@OpeningBalance", account.OpeningBalance, DbType.Decimal, ParameterDirection.Input, null, 18, 2);
             parameters.Add("@OpeningBalanceDate", account.OpeningBalanceDate);
             parameters.Add("@CreatedBy", createdBy);
             parameters.Add("@NewAccountId", dbType: DbType.Int32, direction: ParameterDirection.Output);
@@ -102,7 +102,7 @@ namespace VCIIAMS.Web.Services
             parameters.Add("@AllowManualEntry", account.AllowManualEntry);
             parameters.Add("@Level", account.Level);
             parameters.Add("@DepartmentId", account.DepartmentId);
-            parameters.Add("@OpeningBalance", account.OpeningBalance);
+            parameters.Add("@OpeningBalance", account.OpeningBalance, DbType.Decimal, ParameterDirection.Input, null, 18, 2);
             parameters.Add("@OpeningBalanceDate", account.OpeningBalanceDate);
             parameters.Add("@ModifiedBy", modifiedBy);
             parameters.Add("@ReturnValue", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);

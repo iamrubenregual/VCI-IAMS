@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VCIIAMS.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5247a4cc7b3e84bc4456879655b40c2714919033")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5639dbc59a301f83dd599926287e04c216867d66")]
 [assembly: System.Reflection.AssemblyProductAttribute("VCIIAMS.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VCIIAMS.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

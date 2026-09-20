@@ -81,6 +81,11 @@ namespace VCIIAMS.Web.Controllers
         {
             try
             {
+                ModelState.Remove("CreatedBy");
+                ModelState.Remove("AccountType");
+                ModelState.Remove("ParentAccount");
+                ModelState.Remove("ChildAccounts");
+
                 if (ModelState.IsValid)
                 {
                     // Check if account code already exists
@@ -146,6 +151,11 @@ namespace VCIIAMS.Web.Controllers
 
             try
             {
+                ModelState.Remove("CreatedBy");
+                ModelState.Remove("AccountType");
+                ModelState.Remove("ParentAccount");
+                ModelState.Remove("ChildAccounts");
+
                 if (ModelState.IsValid)
                 {
                     // Check if account code already exists for another account
