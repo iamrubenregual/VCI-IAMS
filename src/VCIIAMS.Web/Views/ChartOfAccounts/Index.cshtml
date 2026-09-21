@@ -131,19 +131,19 @@
                                     }
                                 </td>
                                 <td class="text-center">
-                                    @if (account.IsHeader)
-                                    {
+                                    @if (account.IsHeader) {
                                         <i class="bi bi-check-circle text-success"></i>
                                     }
-                                    else
-                                    {
+                                    else {
                                         <i class="bi bi-x-circle text-muted"></i>
                                     }
                                 </td>
                                 <td class="text-end">
-                                    @if (!account.IsHeader)
-                                    {
+                                    @if (!account.IsHeader) {
                                         @account.OpeningBalance.ToString("N2")
+                                    }
+                                    else {
+                                        @("N/A")
                                     }
                                 </td>
                                 <td class="text-center">

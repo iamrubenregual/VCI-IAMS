@@ -79,13 +79,13 @@
 
                             <dt class="col-sm-5">Status:</dt>
                             <dd class="col-sm-7">
-                                @if (fiscalYear.IsActive)
+                                @if (fiscalYear.IsClosed)
                                 {
-                                    <span class="badge bg-success">Active</span>
+                                    <span class="badge bg-secondary">Inactive</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">Inactive</span>
+                                    <span class="badge bg-success">Active</span>
                                 }
                             </dd>
 
