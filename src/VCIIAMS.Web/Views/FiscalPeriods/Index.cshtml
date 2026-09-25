@@ -19,11 +19,13 @@
 <!-- Filter -->
 <div class="card mb-3">
     <div class="card-body">
-        <form method="get" class="row g-3">
+        <form method="get" class="row g-3" id="filterForm">
             <div class="col-md-6">
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" name="includeInactive"
-                           id="includeInactive" value="true" @(ViewBag.IncludeInactive ? "checked" : "")>
+                           id="includeInactive" value="true"
+                           @(ViewBag.IncludeInactive ? "checked" : "")
+                           onchange="document.getElementById('filterForm').submit();">
                     <label class="form-check-label" for="includeInactive">
                         Include Inactive Fiscal Years
                     </label>
@@ -79,13 +81,13 @@
 
                             <dt class="col-sm-5">Status:</dt>
                             <dd class="col-sm-7">
-                                @if (fiscalYear.IsClosed)
+                                @if (fiscalYear.IsActive)
                                 {
-                                    <span class="badge bg-secondary">Inactive</span>
+                                    <span class="badge bg-success">Active</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-success">Active</span>
+                                    <span class="badge bg-secondary">Inactive</span>
                                 }
                             </dd>
 
