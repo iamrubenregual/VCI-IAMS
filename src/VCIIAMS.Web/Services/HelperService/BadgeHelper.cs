@@ -18,5 +18,16 @@ namespace VCIIAMS.Web.Services.HelperService {
                 "EXPENSE"   => "<span class='badge bg-warning'>Expense</span>",
                 _           => $"<span class='badge bg-secondary'>{category}</span>"
             };
+
+        public static string JournalStatusBadge(string status) =>
+            status switch
+            {
+                "POSTED"    => "<span class='badge bg-success'><i class='bi bi-check-circle me-1'></i>Posted</span>",
+                "DRAFT"     => "<span class='badge bg-warning text-dark'><i class='bi bi-pencil me-1'></i>Draft</span>",
+                "SUBMITTED" => "<span class='badge bg-info'><i class='bi bi-clock me-1'></i>Submitted</span>",
+                "REVERSED"  => "<span class='badge bg-secondary'><i class='bi bi-arrow-counterclockwise me-1'></i>Reversed</span>",
+                "VOID"      => "<span class='badge bg-danger'><i class='bi bi-x-circle me-1'></i>Void</span>",
+                _           => $"<span class='badge bg-secondary'>{status}</span>"
+            };
     }
 }

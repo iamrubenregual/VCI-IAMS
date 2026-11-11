@@ -13,7 +13,7 @@ function toggleSidebar() {
 }
 
 // Load sidebar state on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const sidebar = document.getElementById('sidebar');
     const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
 
@@ -83,9 +83,9 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Auto-hide alerts after 5 seconds
-document.addEventListener('DOMContentLoaded', function() {
-    const alerts = document.querySelectorAll('.alert');
+// Auto-hide success & info alerts after 5 seconds (leave danger and warning alerts visible)
+document.addEventListener('DOMContentLoaded', function () {
+    const alerts = document.querySelectorAll('.alert-success, .alert-info');
     alerts.forEach(alert => {
         setTimeout(() => {
             alert.style.opacity = '0';

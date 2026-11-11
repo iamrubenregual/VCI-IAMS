@@ -10,11 +10,20 @@ namespace VCIIAMS.Web.Data
         {
         }
 
+        // Core DbSets
+        public DbSet<Department> Departments { get; set; }
+
         // Accounting DbSets
         public DbSet<AccountType> AccountTypes { get; set; }
         public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
         public DbSet<FiscalYear> FiscalYears { get; set; }
         public DbSet<FiscalPeriod> FiscalPeriods { get; set; }
+        public DbSet<AccountBalance> AccountBalances { get; set; }
+
+        // General Ledger / Journal Entry DbSets
+        public DbSet<JournalEntryType> JournalEntryTypes { get; set; }
+        public DbSet<JournalEntry> JournalEntries { get; set; }
+        public DbSet<JournalEntryLine> JournalEntryLines { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -92,6 +101,107 @@ namespace VCIIAMS.Web.Data
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasIndex(e => new { e.FiscalYearId, e.PeriodCode }).IsUnique();
+            });
+
+            // Departments configuration
+            modelBuilder.Entity<Department>(entity =>
+            {
+                entity.ToTable("Departments");
+                entity.HasKey(e => e.DepartmentId);
+                entity.Property(e => e.DepartmentCode).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.DepartmentName).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.DepartmentCode).IsUnique();
+            });
+
+            // AccountBalances configuration
+            modelBuilder.Entity<AccountBalance>(entity =>
+            {
+                entity.ToTable("AccountBalances");
+                entity.HasKey(e => e.AccountBalanceId);
+                entity.Property(e => e.OpeningBalance).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.DebitAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.CreditAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.ClosingBalance).HasColumnType("decimal(18,2)");
+
+                entity.HasOne(e => e.Account)
+                    .WithMany()
+                    .HasForeignKey(e => e.AccountId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.FiscalPeriod)
+                    .WithMany()
+                    .HasForeignKey(e => e.FiscalPeriodId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => new { e.AccountId, e.FiscalPeriodId }).IsUnique();
+            });
+
+            // JournalEntryTypes configuration
+            modelBuilder.Entity<JournalEntryType>(entity =>
+            {
+                entity.ToTable("JournalEntryTypes");
+                entity.HasKey(e => e.JournalEntryTypeId);
+                entity.Property(e => e.TypeCode).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.TypeName).IsRequired().HasMaxLength(100);
+                entity.HasIndex(e => e.TypeCode).IsUnique();
+            });
+
+            // JournalEntries configuration
+            modelBuilder.Entity<JournalEntry>(entity =>
+            {
+                entity.ToTable("JournalEntries");
+                entity.HasKey(e => e.JournalEntryId);
+                entity.Property(e => e.JournalNumber).IsRequired().HasMaxLength(30);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.TotalDebit).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.TotalCredit).HasColumnType("decimal(18,2)");
+
+                entity.HasOne(e => e.FiscalPeriod)
+                    .WithMany()
+                    .HasForeignKey(e => e.FiscalPeriodId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.JournalEntryType)
+                    .WithMany(t => t.JournalEntries)
+                    .HasForeignKey(e => e.JournalEntryTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.ReversalOfJournalEntry)
+                    .WithMany()
+                    .HasForeignKey(e => e.ReversalOfJournalEntryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.JournalNumber).IsUnique();
+                entity.HasIndex(e => e.FiscalPeriodId);
+                entity.HasIndex(e => e.EntryDate);
+                entity.HasIndex(e => e.Status);
+            });
+
+            // JournalEntryLines configuration
+            modelBuilder.Entity<JournalEntryLine>(entity =>
+            {
+                entity.ToTable("JournalEntryLines");
+                entity.HasKey(e => e.JournalEntryLineId);
+                entity.Property(e => e.DebitAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.CreditAmount).HasColumnType("decimal(18,2)");
+
+                entity.HasOne(e => e.JournalEntry)
+                    .WithMany(j => j.Lines)
+                    .HasForeignKey(e => e.JournalEntryId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Account)
+                    .WithMany()
+                    .HasForeignKey(e => e.AccountId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Department)
+                    .WithMany()
+                    .HasForeignKey(e => e.DepartmentId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(e => new { e.JournalEntryId, e.LineNumber }).IsUnique();
+                entity.HasIndex(e => e.AccountId);
             });
         }
     }

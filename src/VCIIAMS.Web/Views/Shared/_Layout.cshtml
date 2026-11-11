@@ -49,9 +49,15 @@
                     </a>
                 </li>
                 <li>
-                    <a href="#" style="opacity: 0.5; cursor: not-allowed;">
+                    <a href="/JournalEntries" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "JournalEntries" && ViewContext.RouteData.Values["action"]?.ToString() != "GeneralLedger" ? "active" : "")">
                         <i class="bi bi-journal-text"></i>
                         <span class="menu-text">Journal Entries</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/JournalEntries/GeneralLedger" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "JournalEntries" && ViewContext.RouteData.Values["action"]?.ToString() == "GeneralLedger" ? "active" : "")">
+                        <i class="bi bi-book"></i>
+                        <span class="menu-text">General Ledger</span>
                     </a>
                 </li>
                 <li>

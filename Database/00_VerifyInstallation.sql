@@ -27,13 +27,14 @@ SELECT @TableCount = COUNT(*)
 FROM sys.tables
 WHERE name IN (
     'Users', 'Roles', 'UserRoles', 'Departments', 'AuditLogs',
-    'AccountTypes', 'ChartOfAccounts', 'FiscalYears', 'FiscalPeriods', 'AccountBalances'
+    'AccountTypes', 'ChartOfAccounts', 'FiscalYears', 'FiscalPeriods', 'AccountBalances',
+    'JournalEntryTypes', 'JournalEntries', 'JournalEntryLines'
 );
 
-PRINT 'Expected Tables: 10';
+PRINT 'Expected Tables: 13';
 PRINT 'Found Tables: ' + CAST(@TableCount AS VARCHAR(10));
 
-IF @TableCount = 10
+IF @TableCount = 13
     PRINT '✓ All tables created successfully';
 ELSE
     PRINT '✗ Some tables are missing!';

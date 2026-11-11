@@ -15,6 +15,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IChartOfAccountService, ChartOfAccountService>();
 builder.Services.AddScoped<IFiscalPeriodService, FiscalPeriodService>();
 builder.Services.AddScoped<IAppLogService, AppLogService>();
+builder.Services.AddScoped<IJournalEntryService, JournalEntryService>();
 
 // Add Session
 builder.Services.AddSession(options =>

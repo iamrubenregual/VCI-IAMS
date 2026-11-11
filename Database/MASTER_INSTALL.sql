@@ -234,9 +234,20 @@ PRINT '✓ Seed data loading completed.';
 PRINT '';
 
 -- =============================================
--- STEP 7: Verification
+-- STEP 7: Create Journal Entries (General Ledger)
 -- =============================================
-PRINT '>>> STEP 7: Running Verification...';
+PRINT '>>> STEP 7: Creating Journal Entries Tables & Procedures...';
+PRINT '';
+
+:r 07_CreateJournalEntryTables.sql
+
+PRINT '✓ Journal entries tables and procedures completed.';
+PRINT '';
+
+-- =============================================
+-- STEP 8: Verification
+-- =============================================
+PRINT '>>> STEP 8: Running Verification...';
 PRINT '';
 
 :r 00_VerifyInstallation.sql
