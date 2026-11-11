@@ -38,26 +38,7 @@
 
                     <dt class="col-sm-4">Category:</dt>
                     <dd class="col-sm-8">
-                        @if (Model.Category == "ASSET")
-                        {
-                            <span class="badge bg-success">Asset</span>
-                        }
-                        else if (Model.Category == "LIABILITY")
-                        {
-                            <span class="badge bg-danger">Liability</span>
-                        }
-                        else if (Model.Category == "EQUITY")
-                        {
-                            <span class="badge bg-primary">Equity</span>
-                        }
-                        else if (Model.Category == "REVENUE")
-                        {
-                            <span class="badge bg-success">Revenue</span>
-                        }
-                        else if (Model.Category == "EXPENSE")
-                        {
-                            <span class="badge bg-warning">Expense</span>
-                        }
+                        @Html.Raw(VCIIAMS.Web.Services.HelperService.BadgeHelper.CategoryBadge(@Model.Category.ToString()))
                     </dd>
 
                     <dt class="col-sm-4">Normal Balance:</dt>

@@ -3,6 +3,8 @@
 @{
     ViewData["Title"] = "Delete Account";
     ViewData["Breadcrumb"] = $"<li class='breadcrumb-item'><a href='/ChartOfAccounts'>Chart of Accounts</a></li><li class='breadcrumb-item active'>Delete - {Model.AccountCode}</li>";
+    String category = Model == null || Model.Category == null ? "" : Model.Category.ToString();
+    String accountCode = Model == null || Model.AccountCode == null ? "" : Model.AccountCode.ToString();
 }
 
 <div class="row">
@@ -22,11 +24,11 @@
                 <dl class="row">
                     <dt class="col-sm-4">Account Code:</dt>
                     <dd class="col-sm-8">
-                        <strong>@Model.AccountCode</strong>
+                        <strong>accountCode</strong>
                     </dd>
 
                     <dt class="col-sm-4">Account Name:</dt>
-                    <dd class="col-sm-8">@Model.AccountName</dd>
+                    <dd class="col-sm-8">@(Model == null || Model.AccountName == null ? "" : Model.AccountName.ToString())</dd>
 
                     <dt class="col-sm-4">Account Type:</dt>
                     <dd class="col-sm-8">
@@ -35,26 +37,7 @@
 
                     <dt class="col-sm-4">Category:</dt>
                     <dd class="col-sm-8">
-                        @if (Model.Category == "ASSET")
-                        {
-                            <span class="badge bg-success">Asset</span>
-                        }
-                        else if (Model.Category == "LIABILITY")
-                        {
-                            <span class="badge bg-danger">Liability</span>
-                        }
-                        else if (Model.Category == "EQUITY")
-                        {
-                            <span class="badge bg-primary">Equity</span>
-                        }
-                        else if (Model.Category == "REVENUE")
-                        {
-                            <span class="badge bg-success">Revenue</span>
-                        }
-                        else if (Model.Category == "EXPENSE")
-                        {
-                            <span class="badge bg-warning">Expense</span>
-                        }
+                        @Html.Raw(VCIIAMS.Web.Services.HelperService.BadgeHelper.CategoryBadge(category))
                     </dd>
 
                     <dt class="col-sm-4">Is Header:</dt>
