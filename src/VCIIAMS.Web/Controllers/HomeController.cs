@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using VCIIAMS.Web.Models;
 using VCIIAMS.Web.Services;
+using VCIIAMS.Web.Helpers;
 
 namespace VCIIAMS.Web.Controllers
 {
@@ -8,15 +10,18 @@ namespace VCIIAMS.Web.Controllers
         private readonly IChartOfAccountService _accountService;
         private readonly IFiscalPeriodService _fiscalPeriodService;
         private readonly ILogger<HomeController> _logger;
+        private readonly IAppLogService _logService;
 
         public HomeController(
             IChartOfAccountService accountService,
             IFiscalPeriodService fiscalPeriodService,
-            ILogger<HomeController> logger)
+            ILogger<HomeController> logger,
+            IAppLogService logService)
         {
             _accountService = accountService;
             _fiscalPeriodService = fiscalPeriodService;
             _logger = logger;
+            _logService = logService;
         }
 
         public async Task<IActionResult> Index()
@@ -44,6 +49,8 @@ namespace VCIIAMS.Web.Controllers
                     .ToList();
 
                 ViewBag.AccountsByType = accountsByType;
+
+                _logService.LogAppEvent(new AppLog("Dashboard loaded", "Index"));
 
                 return View();
             }

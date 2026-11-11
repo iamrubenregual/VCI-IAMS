@@ -4,15 +4,11 @@ namespace VCIIAMS.Web.Models
 {
     public class AppLog
     {
-            public AppLog(DateTime timestamp, string message, string actionName)
+            public AppLog(string message, string actionName)
             {
-                Timestamp = timestamp;
                 Message = message;
                 ActionName = actionName;
             }
-
-            [Required]
-            public DateTime Timestamp { get; set; }
 
             [Required]
             public string Message { get; set; }
