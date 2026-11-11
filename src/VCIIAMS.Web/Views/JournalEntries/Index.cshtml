@@ -1,0 +1,246 @@
+@model IEnumerable<JournalEntry>
+@using VCIIAMS.Web.Services.HelperService
+
+@{
+    ViewData["Title"] = "Journal Entries";
+    ViewData["Breadcrumb"] = "<li class='breadcrumb-item active'>Journal Entries</li>";
+    var filter = ViewBag.Filter as JournalEntryFilterViewModel ?? new JournalEntryFilterViewModel();
+}
+
+<div class="row mb-3 align-items-center">
+    <div class="col-md-7">
+        <h2><i class="bi bi-journal-text me-2"></i>Journal Entries</h2>
+        <p class="text-muted mb-0">Record, review, and post general journal vouchers to the General Ledger.</p>
+    </div>
+    <div class="col-md-5 text-end">
+        <a asp-action="GeneralLedger" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-book me-1"></i> General Ledger
+        </a>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> New Journal Entry
+        </a>
+    </div>
+</div>
+
+<!-- Alerts -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Warning"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-x-circle-fill me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Summary Statistics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-start border-primary border-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Total Entries</div>
+                        <div class="fs-4 fw-bold text-dark">@(ViewBag.TotalCount ?? 0)</div>
+                    </div>
+                    <div class="text-primary fs-3">
+                        <i class="bi bi-collection"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-start border-warning border-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Draft Entries</div>
+                        <div class="fs-4 fw-bold text-warning">@(ViewBag.DraftCount ?? 0)</div>
+                    </div>
+                    <div class="text-warning fs-3">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-start border-success border-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Posted Entries</div>
+                        <div class="fs-4 fw-bold text-success">@(ViewBag.PostedCount ?? 0)</div>
+                    </div>
+                    <div class="text-success fs-3">
+                        <i class="bi bi-check2-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-start border-info border-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Posted Volume</div>
+                        <div class="fs-4 fw-bold text-info">₱@(((decimal)(ViewBag.TotalPostedDebit ?? 0m)).ToString("N2"))</div>
+                    </div>
+                    <div class="text-info fs-3">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="SearchTerm" value="@filter.SearchTerm" class="form-control" placeholder="Journal #, memo, ref..." />
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Fiscal Period</label>
+                <select name="FiscalPeriodId" class="form-select" asp-items="ViewBag.FiscalPeriods">
+                    <option value="">-- All Periods --</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Entry Type</label>
+                <select name="JournalEntryTypeId" class="form-select" asp-items="ViewBag.JournalEntryTypes">
+                    <option value="">-- All Types --</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Status</label>
+                <select name="Status" class="form-select">
+                    <option value="">-- All Statuses --</option>
+                    <option value="DRAFT" selected="@(filter.Status == "DRAFT")">Draft</option>
+                    <option value="POSTED" selected="@(filter.Status == "POSTED")">Posted</option>
+                    <option value="REVERSED" selected="@(filter.Status == "REVERSED")">Reversed</option>
+                    <option value="VOID" selected="@(filter.Status == "VOID")">Void</option>
+                </select>
+            </div>
+            <div class="col-md-3 text-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Entries Table -->
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Journal #</th>
+                            <th>Entry Date</th>
+                            <th>Period</th>
+                            <th>Type</th>
+                            <th>Description / Memo</th>
+                            <th class="text-end">Debits</th>
+                            <th class="text-end">Credits</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="fw-bold">
+                                    <a asp-action="Details" asp-route-id="@item.JournalEntryId" class="text-decoration-none">
+                                        @item.JournalNumber
+                                    </a>
+                                    @if (!string.IsNullOrEmpty(item.ReversalOfJournalNumber))
+                                    {
+                                        <div class="small text-muted">Rev of: @item.ReversalOfJournalNumber</div>
+                                    }
+                                </td>
+                                <td>@item.EntryDate.ToString("yyyy-MM-dd")</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@item.PeriodCode</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-dark">@(item.EntryTypeName ?? item.JournalEntryType?.TypeName ?? "General")</span>
+                                </td>
+                                <td class="text-truncate" style="max-width: 280px;" title="@item.Description">
+                                    @item.Description
+                                </td>
+                                <td class="text-end fw-semibold">₱@item.TotalDebit.ToString("N2")</td>
+                                <td class="text-end fw-semibold">₱@item.TotalCredit.ToString("N2")</td>
+                                <td class="text-center">
+                                    @Html.Raw(BadgeHelper.JournalStatusBadge(item.Status))
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-action="Details" asp-route-id="@item.JournalEntryId" target="_blank" class="btn btn-outline-secondary" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (item.Status == "DRAFT")
+                                        {
+                                            <form asp-action="Post" asp-route-id="@item.JournalEntryId" method="post" class="d-inline" onsubmit="return confirm('Post journal entry @item.JournalNumber to the General Ledger?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-success" title="Post Entry">
+                                                    <i class="bi bi-check2"></i>
+                                                </button>
+                                            </form>
+                                            <form asp-action="Delete" asp-route-id="@item.JournalEntryId" method="post" class="d-inline" onsubmit="return confirm('Delete draft entry @item.JournalNumber?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete Draft">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-journal-x fs-1 text-muted d-block mb-3"></i>
+                <h5>No Journal Entries Found</h5>
+                <p class="text-muted">There are no journal entries matching your filter criteria.</p>
+                <a asp-action="Create" class="btn btn-primary mt-2">
+                    <i class="bi bi-plus-circle me-1"></i> Create First Journal Entry
+                </a>
+            </div>
+        }
+    </div>
+</div>
+

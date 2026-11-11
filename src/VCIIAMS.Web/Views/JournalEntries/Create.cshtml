@@ -1,0 +1,331 @@
+@model JournalEntryCreateViewModel
+
+@{
+    ViewData["Title"] = "New Journal Entry";
+    ViewData["Breadcrumb"] = "<li class='breadcrumb-item'><a href='/JournalEntries'>Journal Entries</a></li><li class='breadcrumb-item active'>New</li>";
+}
+
+<div class="row mb-3">
+    <div class="col-md-8">
+        <h2><i class="bi bi-pencil-square me-2"></i>New Journal Entry</h2>
+        <p class="text-muted">Record general journal vouchers across accounts and departments.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<form asp-action="Create" method="post" id="journalEntryForm">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+    <!-- Header Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white py-2">
+            <h5 class="mb-0 fs-6"><i class="bi bi-info-circle me-1"></i> Voucher Header</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label asp-for="JournalNumber" class="form-label fw-bold small">Journal Number</label>
+                    <input asp-for="JournalNumber" class="form-control bg-light" readonly />
+                    <span asp-validation-for="JournalNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="EntryDate" class="form-label fw-bold small">Entry Date <span class="text-danger">*</span></label>
+                    <input asp-for="EntryDate" type="date" class="form-control" required />
+                    <span asp-validation-for="EntryDate" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="FiscalPeriodId" class="form-label fw-bold small">Fiscal Period <span class="text-danger">*</span></label>
+                    <select asp-for="FiscalPeriodId" class="form-select" asp-items="ViewBag.FiscalPeriods" required>
+                        <option value="">-- Select Period --</option>
+                    </select>
+                    <span asp-validation-for="FiscalPeriodId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="JournalEntryTypeId" class="form-label fw-bold small">Entry Type <span class="text-danger">*</span></label>
+                    <select asp-for="JournalEntryTypeId" class="form-select" asp-items="ViewBag.JournalEntryTypes" required>
+                        <option value="">-- Select Type --</option>
+                    </select>
+                    <span asp-validation-for="JournalEntryTypeId" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-3">
+                    <label asp-for="SourceModule" class="form-label fw-bold small">Source Module</label>
+                    <select asp-for="SourceModule" class="form-select">
+                        <option value="GL">GL - General Ledger</option>
+                        <option value="AR">AR - Student Receivables</option>
+                        <option value="AP">AP - Vendor Payables</option>
+                        <option value="FA">FA - Fixed Assets</option>
+                        <option value="BANK">BANK - Banking & Cash</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="SourceReference" class="form-label fw-bold small">Source Reference #</label>
+                    <input asp-for="SourceReference" class="form-control" placeholder="Invoice #, Check #, Memo #" />
+                    <span asp-validation-for="SourceReference" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Description" class="form-label fw-bold small">Description / Memo <span class="text-danger">*</span></label>
+                    <input asp-for="Description" class="form-control" placeholder="Brief narrative explaining the transaction" required />
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lines Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+            <h5 class="mb-0 fs-6"><i class="bi bi-list-check me-1"></i> Transaction Lines</h5>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddLine">
+                <i class="bi bi-plus-lg me-1"></i> Add Line
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle mb-0" id="linesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;" class="text-center">#</th>
+                            <th style="width: 32%;">Account <span class="text-danger">*</span></th>
+                            <th style="width: 18%;">Department</th>
+                            <th style="width: 16%;" class="text-end">Debit (₱)</th>
+                            <th style="width: 16%;" class="text-end">Credit (₱)</th>
+                            <th>Description</th>
+                            <th style="width: 50px;" class="text-center"><i class="bi bi-gear"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody id="linesBody">
+                        @for (int i = 0; i < Model.Lines.Count; i++)
+                        {
+                            <tr class="line-row">
+                                <td class="text-center row-number fw-bold text-muted">@(i + 1)</td>
+                                <td>
+                                    <select name="Lines[@i].AccountId" class="form-select form-select-sm account-select" required>
+                                        <option value="">-- Select Account --</option>
+                                        @foreach (SelectListItem acc in ViewBag.Accounts)
+                                        {
+                                            <option value="@acc.Value" selected="@(acc.Value == Model.Lines[i].AccountId.ToString())">@acc.Text</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="Lines[@i].DepartmentId" class="form-select form-select-sm">
+                                        <option value="">-- None --</option>
+                                        @foreach (SelectListItem dep in ViewBag.Departments)
+                                        {
+                                            <option value="@dep.Value" selected="@(dep.Value == Model.Lines[i].DepartmentId?.ToString())">@dep.Text</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0" name="Lines[@i].DebitAmount"
+                                           value="@(Model.Lines[i].DebitAmount > 0 ? Model.Lines[i].DebitAmount?.ToString("0.00") : "")"
+                                           class="form-control form-control-sm text-end debit-input" placeholder="0.00" />
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0" name="Lines[@i].CreditAmount"
+                                           value="@(Model.Lines[i].CreditAmount > 0 ? Model.Lines[i].CreditAmount?.ToString("0.00") : "")"
+                                           class="form-control form-control-sm text-end credit-input" placeholder="0.00" />
+                                </td>
+                                <td>
+                                    <input type="text" name="Lines[@i].Description" value="@Model.Lines[i].Description"
+                                           class="form-control form-control-sm" placeholder="Line memo..." />
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-link text-danger p-0 btn-remove-row" title="Remove line">
+                                        <i class="bi bi-trash fs-6"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light fw-bold">
+                        <tr>
+                            <td colspan="3" class="text-end">Totals:</td>
+                            <td class="text-end text-primary" id="totalDebitDisplay">₱0.00</td>
+                            <td class="text-end text-primary" id="totalCreditDisplay">₱0.00</td>
+                            <td colspan="2">
+                                <span id="balanceBadge" class="badge bg-secondary">Difference: ₱0.00</span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-x me-1"></i> Cancel
+                </a>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" name="submitAction" value="SaveDraft" class="btn btn-outline-primary">
+                    <i class="bi bi-save me-1"></i> Save as Draft
+                </button>
+                <button type="submit" name="submitAction" value="SaveAndPost" id="btnSaveAndPost" class="btn btn-success">
+                    <i class="bi bi-check2-circle me-1"></i> Save & Post to GL
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Template for adding lines dynamically -->
+<template id="rowTemplate">
+    <tr class="line-row">
+        <td class="text-center row-number fw-bold text-muted">0</td>
+        <td>
+            <select name="Lines[__INDEX__].AccountId" class="form-select form-select-sm account-select" required>
+                <option value="">-- Select Account --</option>
+                @foreach (SelectListItem acc in ViewBag.Accounts)
+                {
+                    <option value="@acc.Value">@acc.Text</option>
+                }
+            </select>
+        </td>
+        <td>
+            <select name="Lines[__INDEX__].DepartmentId" class="form-select form-select-sm">
+                <option value="">-- None --</option>
+                @foreach (SelectListItem dep in ViewBag.Departments)
+                {
+                    <option value="@dep.Value">@dep.Text</option>
+                }
+            </select>
+        </td>
+        <td>
+            <input type="number" step="0.01" min="0" name="Lines[__INDEX__].DebitAmount" class="form-control form-control-sm text-end debit-input" placeholder="0.00" />
+        </td>
+        <td>
+            <input type="number" step="0.01" min="0" name="Lines[__INDEX__].CreditAmount" class="form-control form-control-sm text-end credit-input" placeholder="0.00" />
+        </td>
+        <td>
+            <input type="text" name="Lines[__INDEX__].Description" class="form-control form-control-sm" placeholder="Line memo..." />
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-link text-danger p-0 btn-remove-row" title="Remove line">
+                <i class="bi bi-trash fs-6"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const linesBody = document.getElementById('linesBody');
+            const rowTemplate = document.getElementById('rowTemplate');
+            const btnAddLine = document.getElementById('btnAddLine');
+            const totalDebitDisplay = document.getElementById('totalDebitDisplay');
+            const totalCreditDisplay = document.getElementById('totalCreditDisplay');
+            const balanceBadge = document.getElementById('balanceBadge');
+            const btnSaveAndPost = document.getElementById('btnSaveAndPost');
+
+            function recalculateTotals() {
+                let totalDebit = 0;
+                let totalCredit = 0;
+
+                const debitInputs = linesBody.querySelectorAll('.debit-input');
+                const creditInputs = linesBody.querySelectorAll('.credit-input');
+
+                debitInputs.forEach(input => {
+                    const val = parseFloat(input.value) || 0;
+                    totalDebit += val;
+                });
+
+                creditInputs.forEach(input => {
+                    const val = parseFloat(input.value) || 0;
+                    totalCredit += val;
+                });
+
+                totalDebitDisplay.innerText = '₱' + totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                totalCreditDisplay.innerText = '₱' + totalCredit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                const diff = Math.abs(totalDebit - totalCredit);
+                if (totalDebit > 0 && totalCredit > 0 && diff < 0.005) {
+                    balanceBadge.className = 'badge bg-success';
+                    balanceBadge.innerHTML = '<i class="bi bi-check-circle me-1"></i> Balanced (₱0.00)';
+                    btnSaveAndPost.disabled = false;
+                } else if (totalDebit === 0 && totalCredit === 0) {
+                    balanceBadge.className = 'badge bg-secondary';
+                    balanceBadge.innerText = 'No amounts entered';
+                    btnSaveAndPost.disabled = true;
+                } else {
+                    balanceBadge.className = 'badge bg-danger';
+                    balanceBadge.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i> Out of Balance (Diff: ₱${diff.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+                    btnSaveAndPost.disabled = true;
+                }
+            }
+
+            function reindexRows() {
+                const rows = linesBody.querySelectorAll('.line-row');
+                rows.forEach((row, idx) => {
+                    row.querySelector('.row-number').innerText = (idx + 1);
+                    row.querySelectorAll('select, input').forEach(input => {
+                        const name = input.getAttribute('name');
+                        if (name) {
+                            input.setAttribute('name', name.replace(/Lines\[\d+\]/, `Lines[${idx}]`));
+                        }
+                    });
+                });
+                recalculateTotals();
+            }
+
+            // Exclusivity: entering debit clears credit and vice versa
+            linesBody.addEventListener('input', function (e) {
+                if (e.target.classList.contains('debit-input')) {
+                    const row = e.target.closest('tr');
+                    const creditInput = row.querySelector('.credit-input');
+                    if (parseFloat(e.target.value) > 0) {
+                        creditInput.value = '';
+                    }
+                    recalculateTotals();
+                } else if (e.target.classList.contains('credit-input')) {
+                    const row = e.target.closest('tr');
+                    const debitInput = row.querySelector('.debit-input');
+                    if (parseFloat(e.target.value) > 0) {
+                        debitInput.value = '';
+                    }
+                    recalculateTotals();
+                }
+            });
+
+            // Remove Row
+            linesBody.addEventListener('click', function (e) {
+                const btn = e.target.closest('.btn-remove-row');
+                if (btn) {
+                    const rows = linesBody.querySelectorAll('.line-row');
+                    if (rows.length <= 2) {
+                        alert('A journal entry must have at least two lines.');
+                        return;
+                    }
+                    btn.closest('tr').remove();
+                    reindexRows();
+                }
+            });
+
+            // Add Row
+            btnAddLine.addEventListener('click', function () {
+                const index = linesBody.querySelectorAll('.line-row').length;
+                let html = rowTemplate.innerHTML.replace(/__INDEX__/g, index);
+                const tempDiv = document.createElement('tbody');
+                tempDiv.innerHTML = html;
+                const newRow = tempDiv.firstElementChild;
+                linesBody.appendChild(newRow);
+                reindexRows();
+            });
+
+            // Initial calculation
+            recalculateTotals();
+        });
+    </script>
+}
+

@@ -1,0 +1,251 @@
+@model JournalEntry
+@using VCIIAMS.Web.Services.HelperService
+
+@{
+    ViewData["Title"] = $"Journal Entry - {Model.JournalNumber}";
+    ViewData["Breadcrumb"] = $"<li class='breadcrumb-item'><a href='/JournalEntries'>Journal Entries</a></li><li class='breadcrumb-item active'>{Model.JournalNumber}</li>";
+}
+
+<!-- Action Bar (Hidden when printing) -->
+<div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left me-1"></i> Back to List
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-dark">
+            <i class="bi bi-printer me-1"></i> Print Voucher
+        </button>
+    </div>
+    <div class="d-flex gap-2">
+        @if (Model.Status == "DRAFT")
+        {
+            <form asp-action="Post" asp-route-id="@Model.JournalEntryId" method="post" class="d-inline" onsubmit="return confirm('Post journal entry @Model.JournalNumber to the General Ledger? This action updates account balances.');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check2-circle me-1"></i> Post to GL
+                </button>
+            </form>
+            <form asp-action="Void" asp-route-id="@Model.JournalEntryId" method="post" class="d-inline" onsubmit="return confirm('Void this draft journal entry?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-warning">
+                    <i class="bi bi-slash-circle me-1"></i> Void
+                </button>
+            </form>
+            <form asp-action="Delete" asp-route-id="@Model.JournalEntryId" method="post" class="d-inline" onsubmit="return confirm('Delete this draft entry permanently?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash me-1"></i> Delete
+                </button>
+            </form>
+        }
+        else if (Model.Status == "POSTED")
+        {
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reverseModal">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reverse Entry
+            </button>
+        }
+    </div>
+</div>
+
+<!-- Alerts -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show d-print-none" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show d-print-none" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Warning"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show d-print-none" role="alert">
+        <i class="bi bi-x-circle-fill me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Printable Journal Voucher Card -->
+<div class="card shadow-sm border mb-4">
+    <div class="card-body p-4">
+        <!-- Institution Header for Print -->
+        <div class="text-center border-bottom pb-3 mb-4">
+            <h4 class="fw-bold mb-1">VALENCIA COLLEGES (BUKIDNON), INC.</h4>
+            <div class="text-muted small">Integrated Accounting Management System (VCI-IAMS)</div>
+            <h5 class="mt-3 text-uppercase text-decoration-underline fw-bold">General Journal Voucher</h5>
+        </div>
+
+        <!-- Voucher Metadata Grid -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="text-muted small">Journal Number:</div>
+                <div class="fs-5 fw-bold text-primary">@Model.JournalNumber</div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="text-muted small">Status:</div>
+                <div>@Html.Raw(BadgeHelper.JournalStatusBadge(Model.Status))</div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="text-muted small">Entry Date:</div>
+                <div class="fw-semibold">@Model.EntryDate.ToString("MMMM dd, yyyy")</div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="text-muted small">Fiscal Period:</div>
+                <div class="fw-semibold">@Model.PeriodCode (@Model.FiscalYearCode)</div>
+            </div>
+
+            <div class="col-md-3 col-6">
+                <div class="text-muted small">Entry Type:</div>
+                <div class="fw-semibold">@(Model.EntryTypeName ?? Model.JournalEntryType?.TypeName ?? "General")</div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="text-muted small">Source Module / Ref:</div>
+                <div class="fw-semibold">@Model.SourceModule @(!string.IsNullOrEmpty(Model.SourceReference) ? $"({Model.SourceReference})" : "")</div>
+            </div>
+            <div class="col-md-6 col-12">
+                <div class="text-muted small">Description / Memo:</div>
+                <div class="fw-semibold">@Model.Description</div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ReversalOfJournalNumber))
+            {
+                <div class="col-12">
+                    <div class="alert alert-secondary py-2 mb-0 small">
+                        <i class="bi bi-info-circle me-1"></i> This voucher is a reversal of <strong>@Model.ReversalOfJournalNumber</strong>.
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Lines Table -->
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered table-striped align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40px;" class="text-center">#</th>
+                        <th style="width: 140px;">Account Code</th>
+                        <th>Account Name</th>
+                        <th style="width: 160px;">Department</th>
+                        <th style="width: 150px;" class="text-end">Debit (₱)</th>
+                        <th style="width: 150px;" class="text-end">Credit (₱)</th>
+                        <th>Narration / Memo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in Model.Lines)
+                    {
+                        <tr>
+                            <td class="text-center text-muted small">@line.LineNumber</td>
+                            <td class="font-monospace fw-bold">@line.AccountCode</td>
+                            <td>@line.AccountName</td>
+                            <td>@(string.IsNullOrEmpty(line.DepartmentName) ? "-" : line.DepartmentName)</td>
+                            <td class="text-end fw-semibold">
+                                @(line.DebitAmount > 0 ? line.DebitAmount.ToString("N2") : "-")
+                            </td>
+                            <td class="text-end fw-semibold">
+                                @(line.CreditAmount > 0 ? line.CreditAmount.ToString("N2") : "-")
+                            </td>
+                            <td class="small text-muted">@line.Description</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-light fw-bold">
+                    <tr>
+                        <td colspan="4" class="text-end">Voucher Totals:</td>
+                        <td class="text-end text-primary fs-6">₱@Model.TotalDebit.ToString("N2")</td>
+                        <td class="text-end text-primary fs-6">₱@Model.TotalCredit.ToString("N2")</td>
+                        <td class="text-center">
+                            @if (Model.IsBalanced)
+                            {
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Balanced</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i> Unbalanced</span>
+                            }
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Audit & Signatures -->
+        <div class="row pt-4 mt-4 border-top">
+            <div class="col-md-4 col-4 text-center">
+                <div class="small text-muted mb-4">Prepared By:</div>
+                <div class="fw-bold border-bottom pb-1 mx-3">@Model.CreatedBy</div>
+                <div class="small text-muted mt-1">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</div>
+            </div>
+            <div class="col-md-4 col-4 text-center">
+                <div class="small text-muted mb-4">Posted By:</div>
+                <div class="fw-bold border-bottom pb-1 mx-3">@(Model.PostedBy ?? "---")</div>
+                <div class="small text-muted mt-1">@(Model.PostedDate?.ToString("yyyy-MM-dd HH:mm") ?? "Pending Posting")</div>
+            </div>
+            <div class="col-md-4 col-4 text-center">
+                <div class="small text-muted mb-4">Approved By:</div>
+                <div class="fw-bold border-bottom pb-1 mx-3">&nbsp;</div>
+                <div class="small text-muted mt-1">Comptroller / Finance Officer</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reversal Modal -->
+@if (Model.Status == "POSTED")
+{
+    <div class="modal fade" id="reverseModal" tabindex="-1" aria-labelledby="reverseModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form asp-action="Reverse" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="OriginalJournalEntryId" value="@Model.JournalEntryId" />
+                    <input type="hidden" name="JournalNumber" value="@Model.JournalNumber" />
+
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="reverseModalLabel">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reverse Journal Entry
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning small">
+                            Reversing will generate an offsetting journal entry with debits and credits swapped, and post it to update the General Ledger.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Original Journal #</label>
+                            <input type="text" class="form-control bg-light" value="@Model.JournalNumber" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Reversal Fiscal Period <span class="text-danger">*</span></label>
+                            <select name="ReversalPeriodId" class="form-select" asp-items="ViewBag.OpenPeriods" required>
+                                <option value="">-- Select Open Period --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Reversal Date <span class="text-danger">*</span></label>
+                            <input type="date" name="ReversalDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Reason for Reversal</label>
+                            <textarea name="Reason" class="form-control" rows="2" placeholder="Accrual reversal, correction of error, etc."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Confirm & Post Reversal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
