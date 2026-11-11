@@ -74,6 +74,7 @@ After running the seed script:
 4. Run `dotnet run` to start the application
 5. Navigate to `https://localhost:5001`
 
+
 ---
 
 **Project**: VCI-IAMS  

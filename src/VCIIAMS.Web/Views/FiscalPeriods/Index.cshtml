@@ -19,11 +19,13 @@
 <!-- Filter -->
 <div class="card mb-3">
     <div class="card-body">
-        <form method="get" class="row g-3">
+        <form method="get" class="row g-3" id="filterForm">
             <div class="col-md-6">
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" name="includeInactive"
-                           id="includeInactive" value="true" @(ViewBag.IncludeInactive ? "checked" : "")>
+                           id="includeInactive" value="true"
+                           @(ViewBag.IncludeInactive ? "checked" : "")
+                           onchange="document.getElementById('filterForm').submit();">
                     <label class="form-check-label" for="includeInactive">
                         Include Inactive Fiscal Years
                     </label>
@@ -42,7 +44,7 @@
 </div>
 
 <!-- Fiscal Years List -->
-<div class="row">
+<div class="row" style="width: 100%;">
     @if (Model != null && Model.Any())
     {
         @foreach (var fiscalYear in Model)
@@ -54,7 +56,7 @@
                             <h5 class="mb-0">
                                 <i class="bi bi-calendar-range"></i> @fiscalYear.FiscalYearName
                             </h5>
-                            <span class="badge @(fiscalYear.IsClosed ? "bg-dark" : "bg-light text-dark")">
+                            <span class="badge @(fiscalYear.IsClosed ? "bg-dark" : "bg-light text-dark")" style="margin-left: 10px">
                                 @fiscalYear.StatusDisplay
                             </span>
                         </div>

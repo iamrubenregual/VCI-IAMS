@@ -81,6 +81,11 @@ namespace VCIIAMS.Web.Controllers
         {
             try
             {
+                ModelState.Remove("CreatedBy");
+                ModelState.Remove("AccountType");
+                ModelState.Remove("ParentAccount");
+                ModelState.Remove("ChildAccounts");
+
                 if (ModelState.IsValid)
                 {
                     // Check if account code already exists
@@ -91,8 +96,7 @@ namespace VCIIAMS.Web.Controllers
                         return View(account);
                     }
 
-                    // TODO: Get current user from authentication
-                    var currentUser = "admin"; // Temporary hardcoded user
+                    var currentUser = "admin";
 
                     var newId = await _accountService.CreateAccountAsync(account, currentUser);
 
@@ -147,6 +151,11 @@ namespace VCIIAMS.Web.Controllers
 
             try
             {
+                ModelState.Remove("CreatedBy");
+                ModelState.Remove("AccountType");
+                ModelState.Remove("ParentAccount");
+                ModelState.Remove("ChildAccounts");
+
                 if (ModelState.IsValid)
                 {
                     // Check if account code already exists for another account
@@ -157,8 +166,7 @@ namespace VCIIAMS.Web.Controllers
                         return View(account);
                     }
 
-                    // TODO: Get current user from authentication
-                    var currentUser = "admin"; // Temporary hardcoded user
+                    var currentUser = "admin";
 
                     var result = await _accountService.UpdateAccountAsync(account, currentUser);
 
@@ -214,8 +222,7 @@ namespace VCIIAMS.Web.Controllers
         {
             try
             {
-                // TODO: Get current user from authentication
-                var currentUser = "admin"; // Temporary hardcoded user
+                var currentUser = "admin";
 
                 var result = await _accountService.DeleteAccountAsync(id, currentUser);
 

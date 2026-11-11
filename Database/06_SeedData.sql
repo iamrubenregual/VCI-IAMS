@@ -110,7 +110,7 @@ BEGIN
     VALUES (
         'admin',
         'admin@vci.edu.ph',
-        'AQAAAAEAACcQAAAAEKZxG6JxMpCv8PjKvD7qR6oJ5Gm9TZJ4t/5mK8H3Q2w1N7Y0V9X6z5C4B3A2M1L0',
+            'AQAAAAMAAYagAAAAENLxkXTcLmcSXWowZ7EufRhzoemrbnZsvlzJu6fF9LDGm1YxiDKXi4AX5ZFOslCz/Q==',
         'RandomSaltValueHere123',
         'System',
         'Administrator',
@@ -138,6 +138,12 @@ BEGIN
 END
 GO
 
+-- Repair the original malformed development hash without overwriting a changed password.
+UPDATE Users
+SET PasswordHash = 'AQAAAAMAAYagAAAAENLxkXTcLmcSXWowZ7EufRhzoemrbnZsvlzJu6fF9LDGm1YxiDKXi4AX5ZFOslCz/Q=='
+WHERE Username = 'admin'
+  AND PasswordHash = 'AQAAAAEAACcQAAAAEKZxG6JxMpCv8PjKvD7qR6oJ5Gm9TZJ4t/5mK8H3Q2w1N7Y0V9X6z5C4B3A2M1L0';
+GO
 -- =============================================
 -- Seed Sample Chart of Accounts
 -- Basic structure for educational institution

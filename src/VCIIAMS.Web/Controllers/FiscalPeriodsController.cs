@@ -74,6 +74,9 @@ namespace VCIIAMS.Web.Controllers
         {
             try
             {
+                // Remove properties not submitted in the form from validation
+                ModelState.Remove("CreatedBy");
+
                 if (ModelState.IsValid)
                 {
                     // Validate dates
@@ -149,6 +152,9 @@ namespace VCIIAMS.Web.Controllers
 
             try
             {
+                // Remove properties not submitted in the form from validation
+                ModelState.Remove("CreatedBy");
+
                 if (ModelState.IsValid)
                 {
                     // Validate dates
