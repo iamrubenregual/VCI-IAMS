@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+using MySqlConnector;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using Dapper;
@@ -23,11 +23,11 @@ namespace VCIIAMS.Web.Services
 
         public async Task<IEnumerable<ChartOfAccount>> GetAllAccountsAsync(bool includeInactive = false, int? accountTypeId = null, int? departmentId = null)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@IncludeInactive", includeInactive);
-            parameters.Add("@AccountTypeId", accountTypeId);
-            parameters.Add("@DepartmentId", departmentId);
+            parameters.Add("p_IncludeInactive", includeInactive);
+            parameters.Add("p_AccountTypeId", accountTypeId);
+            parameters.Add("p_DepartmentId", departmentId);
 
             var accounts = await connection.QueryAsync<ChartOfAccount>(
                 "sp_GetAllChartOfAccounts",
@@ -40,9 +40,9 @@ namespace VCIIAMS.Web.Services
 
         public async Task<ChartOfAccount?> GetAccountByIdAsync(int accountId)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@AccountId", accountId);
+            parameters.Add("p_AccountId", accountId);
 
             var account = await connection.QueryFirstOrDefaultAsync<ChartOfAccount>(
                 "sp_GetChartOfAccountById",
@@ -63,21 +63,21 @@ namespace VCIIAMS.Web.Services
 
         public async Task<int> CreateAccountAsync(ChartOfAccount account, string createdBy)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@AccountCode", account.AccountCode);
-            parameters.Add("@AccountName", account.AccountName);
-            parameters.Add("@AccountTypeId", account.AccountTypeId);
-            parameters.Add("@ParentAccountId", account.ParentAccountId);
-            parameters.Add("@Description", account.Description);
-            parameters.Add("@IsHeader", account.IsHeader);
-            parameters.Add("@AllowManualEntry", account.AllowManualEntry);
-            parameters.Add("@Level", account.Level);
-            parameters.Add("@DepartmentId", account.DepartmentId);
-            parameters.Add("@OpeningBalance", account.OpeningBalance, DbType.Decimal, ParameterDirection.Input, null, 18, 2);
-            parameters.Add("@OpeningBalanceDate", account.OpeningBalanceDate);
-            parameters.Add("@CreatedBy", createdBy);
-            parameters.Add("@NewAccountId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            parameters.Add("p_AccountCode", account.AccountCode);
+            parameters.Add("p_AccountName", account.AccountName);
+            parameters.Add("p_AccountTypeId", account.AccountTypeId);
+            parameters.Add("p_ParentAccountId", account.ParentAccountId);
+            parameters.Add("p_Description", account.Description);
+            parameters.Add("p_IsHeader", account.IsHeader);
+            parameters.Add("p_AllowManualEntry", account.AllowManualEntry);
+            parameters.Add("p_Level", account.Level);
+            parameters.Add("p_DepartmentId", account.DepartmentId);
+            parameters.Add("p_OpeningBalance", account.OpeningBalance, DbType.Decimal, ParameterDirection.Input, null, 18, 2);
+            parameters.Add("p_OpeningBalanceDate", account.OpeningBalanceDate);
+            parameters.Add("p_CreatedBy", createdBy);
+            parameters.Add("p_NewAccountId", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
             await connection.ExecuteAsync(
                 "sp_CreateChartOfAccount",
@@ -85,27 +85,26 @@ namespace VCIIAMS.Web.Services
                 commandType: CommandType.StoredProcedure
             );
 
-            return parameters.Get<int>("@NewAccountId");
+            return parameters.Get<int>("p_NewAccountId");
         }
 
         public async Task<bool> UpdateAccountAsync(ChartOfAccount account, string modifiedBy)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@AccountId", account.AccountId);
-            parameters.Add("@AccountCode", account.AccountCode);
-            parameters.Add("@AccountName", account.AccountName);
-            parameters.Add("@AccountTypeId", account.AccountTypeId);
-            parameters.Add("@ParentAccountId", account.ParentAccountId);
-            parameters.Add("@Description", account.Description);
-            parameters.Add("@IsHeader", account.IsHeader);
-            parameters.Add("@AllowManualEntry", account.AllowManualEntry);
-            parameters.Add("@Level", account.Level);
-            parameters.Add("@DepartmentId", account.DepartmentId);
-            parameters.Add("@OpeningBalance", account.OpeningBalance, DbType.Decimal, ParameterDirection.Input, null, 18, 2);
-            parameters.Add("@OpeningBalanceDate", account.OpeningBalanceDate);
-            parameters.Add("@ModifiedBy", modifiedBy);
-            parameters.Add("@ReturnValue", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
+            parameters.Add("p_AccountId", account.AccountId);
+            parameters.Add("p_AccountCode", account.AccountCode);
+            parameters.Add("p_AccountName", account.AccountName);
+            parameters.Add("p_AccountTypeId", account.AccountTypeId);
+            parameters.Add("p_ParentAccountId", account.ParentAccountId);
+            parameters.Add("p_Description", account.Description);
+            parameters.Add("p_IsHeader", account.IsHeader);
+            parameters.Add("p_AllowManualEntry", account.AllowManualEntry);
+            parameters.Add("p_Level", account.Level);
+            parameters.Add("p_DepartmentId", account.DepartmentId);
+            parameters.Add("p_OpeningBalance", account.OpeningBalance, DbType.Decimal, ParameterDirection.Input, null, 18, 2);
+            parameters.Add("p_OpeningBalanceDate", account.OpeningBalanceDate);
+            parameters.Add("p_ModifiedBy", modifiedBy);
 
             await connection.ExecuteAsync(
                 "sp_UpdateChartOfAccount",
@@ -113,16 +112,15 @@ namespace VCIIAMS.Web.Services
                 commandType: CommandType.StoredProcedure
             );
 
-            return parameters.Get<int>("@ReturnValue") == 0;
+            return true;
         }
 
         public async Task<bool> DeleteAccountAsync(int accountId, string deletedBy)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@AccountId", accountId);
-            parameters.Add("@DeletedBy", deletedBy);
-            parameters.Add("@ReturnValue", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
+            parameters.Add("p_AccountId", accountId);
+            parameters.Add("p_DeletedBy", deletedBy);
 
             await connection.ExecuteAsync(
                 "sp_DeleteChartOfAccount",
@@ -130,7 +128,7 @@ namespace VCIIAMS.Web.Services
                 commandType: CommandType.StoredProcedure
             );
 
-            return parameters.Get<int>("@ReturnValue") == 0;
+            return true;
         }
 
         public async Task<IEnumerable<AccountType>> GetAllAccountTypesAsync()

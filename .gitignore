@@ -1,0 +1,66 @@
+## Visual Studio / .NET Core GitIgnore
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userprefs
+
+# Roslyn compiler caches
+*.ide/
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# Publish / Package outputs
+*.nupkg
+*.snupkg
+*.appx
+*.msix
+*.apk
+*.aab
+
+# Local runtime settings / secrets
+appsettings*.local.json
+appsettings.Production.json
+secrets.json
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Temporary / Scratch files
+*.tmp
+*.log
+

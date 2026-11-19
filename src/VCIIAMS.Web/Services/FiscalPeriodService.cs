@@ -1,4 +1,4 @@
-using Microsoft.Data.SqlClient;
+using MySqlConnector;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using Dapper;
@@ -24,9 +24,9 @@ namespace VCIIAMS.Web.Services
         // Fiscal Years
         public async Task<IEnumerable<FiscalYear>> GetAllFiscalYearsAsync(bool includeInactive = false)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@IncludeInactive", includeInactive);
+            parameters.Add("p_IncludeInactive", includeInactive);
 
             var fiscalYears = await connection.QueryAsync<FiscalYear>(
                 "sp_GetAllFiscalYears",
@@ -39,9 +39,9 @@ namespace VCIIAMS.Web.Services
 
         public async Task<FiscalYear?> GetFiscalYearByIdAsync(int fiscalYearId)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@FiscalYearId", fiscalYearId);
+            parameters.Add("p_FiscalYearId", fiscalYearId);
 
             var fiscalYear = await connection.QueryFirstOrDefaultAsync<FiscalYear>(
                 "sp_GetFiscalYearById",
@@ -54,15 +54,15 @@ namespace VCIIAMS.Web.Services
 
         public async Task<int> CreateFiscalYearAsync(FiscalYear fiscalYear, bool createPeriods, string createdBy)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@FiscalYearCode", fiscalYear.FiscalYearCode);
-            parameters.Add("@FiscalYearName", fiscalYear.FiscalYearName);
-            parameters.Add("@StartDate", fiscalYear.StartDate);
-            parameters.Add("@EndDate", fiscalYear.EndDate);
-            parameters.Add("@CreatePeriods", createPeriods);
-            parameters.Add("@CreatedBy", createdBy);
-            parameters.Add("@NewFiscalYearId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            parameters.Add("p_FiscalYearCode", fiscalYear.FiscalYearCode);
+            parameters.Add("p_FiscalYearName", fiscalYear.FiscalYearName);
+            parameters.Add("p_StartDate", fiscalYear.StartDate);
+            parameters.Add("p_EndDate", fiscalYear.EndDate);
+            parameters.Add("p_CreatePeriods", createPeriods);
+            parameters.Add("p_CreatedBy", createdBy);
+            parameters.Add("p_NewFiscalYearId", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
             await connection.ExecuteAsync(
                 "sp_CreateFiscalYear",
@@ -70,19 +70,19 @@ namespace VCIIAMS.Web.Services
                 commandType: CommandType.StoredProcedure
             );
 
-            return parameters.Get<int>("@NewFiscalYearId");
+            return parameters.Get<int>("p_NewFiscalYearId");
         }
 
         public async Task<bool> UpdateFiscalYearAsync(FiscalYear fiscalYear, string modifiedBy)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@FiscalYearId", fiscalYear.FiscalYearId);
-            parameters.Add("@FiscalYearCode", fiscalYear.FiscalYearCode);
-            parameters.Add("@FiscalYearName", fiscalYear.FiscalYearName);
-            parameters.Add("@StartDate", fiscalYear.StartDate);
-            parameters.Add("@EndDate", fiscalYear.EndDate);
-            parameters.Add("@ModifiedBy", modifiedBy);
+            parameters.Add("p_FiscalYearId", fiscalYear.FiscalYearId);
+            parameters.Add("p_FiscalYearCode", fiscalYear.FiscalYearCode);
+            parameters.Add("p_FiscalYearName", fiscalYear.FiscalYearName);
+            parameters.Add("p_StartDate", fiscalYear.StartDate);
+            parameters.Add("p_EndDate", fiscalYear.EndDate);
+            parameters.Add("p_ModifiedBy", modifiedBy);
 
             var result = await connection.ExecuteAsync(
                 "sp_UpdateFiscalYear",
@@ -123,10 +123,10 @@ namespace VCIIAMS.Web.Services
         // Fiscal Periods
         public async Task<IEnumerable<FiscalPeriod>> GetAllFiscalPeriodsAsync(int? fiscalYearId = null, bool includeInactive = false)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@FiscalYearId", fiscalYearId);
-            parameters.Add("@IncludeInactive", includeInactive);
+            parameters.Add("p_FiscalYearId", fiscalYearId);
+            parameters.Add("p_IncludeInactive", includeInactive);
 
             var periods = await connection.QueryAsync<FiscalPeriod>(
                 "sp_GetAllFiscalPeriods",
@@ -157,10 +157,10 @@ namespace VCIIAMS.Web.Services
 
         public async Task<bool> CloseFiscalPeriodAsync(int fiscalPeriodId, string closedBy)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = new MySqlConnection(_connectionString);
             var parameters = new DynamicParameters();
-            parameters.Add("@FiscalPeriodId", fiscalPeriodId);
-            parameters.Add("@ClosedBy", closedBy);
+            parameters.Add("p_FiscalPeriodId", fiscalPeriodId);
+            parameters.Add("p_ClosedBy", closedBy);
 
             var result = await connection.ExecuteAsync(
                 "sp_CloseFiscalPeriod",
