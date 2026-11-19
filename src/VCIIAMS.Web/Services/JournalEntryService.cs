@@ -221,113 +221,117 @@ namespace VCIIAMS.Web.Services
 
         public async Task<(bool Success, string Message)> PostJournalEntryAsync(int journalEntryId, string postedBy)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync<(bool Success, string Message)>(async () =>
             {
-                var entry = await _context.JournalEntries
-                    .Include(j => j.FiscalPeriod)
-                    .Include(j => j.Lines)
-                        .ThenInclude(l => l.Account)
-                            .ThenInclude(a => a!.AccountType)
-                    .FirstOrDefaultAsync(j => j.JournalEntryId == journalEntryId);
-
-                if (entry == null)
-                    return (false, "Journal entry not found.");
-
-                if (entry.Status == "POSTED")
-                    return (false, "Journal entry is already posted.");
-
-                if (entry.Status == "VOID" || entry.Status == "REVERSED")
-                    return (false, $"Cannot post an entry with status '{entry.Status}'.");
-
-                if (entry.FiscalPeriod == null || entry.FiscalPeriod.IsClosed)
-                    return (false, "Cannot post to a closed fiscal period.");
-
-                if (entry.Lines == null || entry.Lines.Count < 2)
-                    return (false, "Journal entry must have at least two lines (one debit and one credit).");
-
-                var totalDebit = entry.Lines.Sum(l => l.DebitAmount);
-                var totalCredit = entry.Lines.Sum(l => l.CreditAmount);
-
-                if (totalDebit <= 0 || totalCredit <= 0 || totalDebit != totalCredit)
-                    return (false, $"Entry is unbalanced. Total Debits: {totalDebit:N2}, Total Credits: {totalCredit:N2}.");
-
-                // Validate no header accounts or inactive accounts
-                foreach (var line in entry.Lines)
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    if (line.Account == null)
-                        line.Account = await _context.ChartOfAccounts.FindAsync(line.AccountId);
+                    var entry = await _context.JournalEntries
+                        .Include(j => j.FiscalPeriod)
+                        .Include(j => j.Lines)
+                            .ThenInclude(l => l.Account)
+                                .ThenInclude(a => a!.AccountType)
+                        .FirstOrDefaultAsync(j => j.JournalEntryId == journalEntryId);
 
-                    if (line.Account == null)
-                        return (false, $"Account ID {line.AccountId} does not exist.");
+                    if (entry == null)
+                        return (false, "Journal entry not found.");
 
-                    if (line.Account.IsHeader)
-                        return (false, $"Cannot post to header account '{line.Account.AccountCode} - {line.Account.AccountName}'.");
+                    if (entry.Status == "POSTED")
+                        return (false, "Journal entry is already posted.");
 
-                    if (!line.Account.IsActive)
-                        return (false, $"Cannot post to inactive account '{line.Account.AccountCode} - {line.Account.AccountName}'.");
-                }
+                    if (entry.Status == "VOID" || entry.Status == "REVERSED")
+                        return (false, $"Cannot post an entry with status '{entry.Status}'.");
 
-                // Update entry status
-                entry.Status = "POSTED";
-                entry.PostingDate = DateTime.Today;
-                entry.PostedBy = postedBy;
-                entry.PostedDate = DateTime.Now;
-                entry.TotalDebit = totalDebit;
-                entry.TotalCredit = totalCredit;
-                entry.ModifiedBy = postedBy;
-                entry.ModifiedDate = DateTime.Now;
+                    if (entry.FiscalPeriod == null || entry.FiscalPeriod.IsClosed)
+                        return (false, "Cannot post to a closed fiscal period.");
 
-                // Update / Upsert AccountBalances
-                var groupedByAccount = entry.Lines
-                    .GroupBy(l => l.AccountId)
-                    .Select(g => new
+                    if (entry.Lines == null || entry.Lines.Count < 2)
+                        return (false, "Journal entry must have at least two lines (one debit and one credit).");
+
+                    var totalDebit = entry.Lines.Sum(l => l.DebitAmount);
+                    var totalCredit = entry.Lines.Sum(l => l.CreditAmount);
+
+                    if (totalDebit <= 0 || totalCredit <= 0 || totalDebit != totalCredit)
+                        return (false, $"Entry is unbalanced. Total Debits: {totalDebit:N2}, Total Credits: {totalCredit:N2}.");
+
+                    // Validate no header accounts or inactive accounts
+                    foreach (var line in entry.Lines)
                     {
-                        AccountId = g.Key,
-                        Debit = g.Sum(x => x.DebitAmount),
-                        Credit = g.Sum(x => x.CreditAmount)
-                    });
+                        if (line.Account == null)
+                            line.Account = await _context.ChartOfAccounts.FindAsync(line.AccountId);
 
-                foreach (var accGroup in groupedByAccount)
-                {
-                    var balance = await _context.AccountBalances
-                        .FirstOrDefaultAsync(b => b.AccountId == accGroup.AccountId && b.FiscalPeriodId == entry.FiscalPeriodId);
+                        if (line.Account == null)
+                            return (false, $"Account ID {line.AccountId} does not exist.");
 
-                    if (balance == null)
-                    {
-                        balance = new AccountBalance
+                        if (line.Account.IsHeader)
+                            return (false, $"Cannot post to header account '{line.Account.AccountCode} - {line.Account.AccountName}'.");
+
+                        if (!line.Account.IsActive)
+                            return (false, $"Cannot post to inactive account '{line.Account.AccountCode} - {line.Account.AccountName}'.");
+                    }
+
+                    // Update entry status
+                    entry.Status = "POSTED";
+                    entry.PostingDate = DateTime.Today;
+                    entry.PostedBy = postedBy;
+                    entry.PostedDate = DateTime.Now;
+                    entry.TotalDebit = totalDebit;
+                    entry.TotalCredit = totalCredit;
+                    entry.ModifiedBy = postedBy;
+                    entry.ModifiedDate = DateTime.Now;
+
+                    // Update / Upsert AccountBalances
+                    var groupedByAccount = entry.Lines
+                        .GroupBy(l => l.AccountId)
+                        .Select(g => new
                         {
-                            AccountId = accGroup.AccountId,
-                            FiscalPeriodId = entry.FiscalPeriodId,
-                            OpeningBalance = 0,
-                            DebitAmount = accGroup.Debit,
-                            CreditAmount = accGroup.Credit,
-                            ClosingBalance = accGroup.Debit - accGroup.Credit,
-                            LastUpdated = DateTime.Now
-                        };
-                        _context.AccountBalances.Add(balance);
-                    }
-                    else
+                            AccountId = g.Key,
+                            Debit = g.Sum(x => x.DebitAmount),
+                            Credit = g.Sum(x => x.CreditAmount)
+                        });
+
+                    foreach (var accGroup in groupedByAccount)
                     {
-                        balance.DebitAmount += accGroup.Debit;
-                        balance.CreditAmount += accGroup.Credit;
-                        balance.ClosingBalance = balance.OpeningBalance + balance.DebitAmount - balance.CreditAmount;
-                        balance.LastUpdated = DateTime.Now;
+                        var balance = await _context.AccountBalances
+                            .FirstOrDefaultAsync(b => b.AccountId == accGroup.AccountId && b.FiscalPeriodId == entry.FiscalPeriodId);
+
+                        if (balance == null)
+                        {
+                            balance = new AccountBalance
+                            {
+                                AccountId = accGroup.AccountId,
+                                FiscalPeriodId = entry.FiscalPeriodId,
+                                OpeningBalance = 0,
+                                DebitAmount = accGroup.Debit,
+                                CreditAmount = accGroup.Credit,
+                                ClosingBalance = accGroup.Debit - accGroup.Credit,
+                                LastUpdated = DateTime.Now
+                            };
+                            _context.AccountBalances.Add(balance);
+                        }
+                        else
+                        {
+                            balance.DebitAmount += accGroup.Debit;
+                            balance.CreditAmount += accGroup.Credit;
+                            balance.ClosingBalance = balance.OpeningBalance + balance.DebitAmount - balance.CreditAmount;
+                            balance.LastUpdated = DateTime.Now;
+                        }
                     }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("Posted journal entry {JournalNumber} with total {TotalDebit:N2}", entry.JournalNumber, totalDebit);
+                    return (true, $"Journal entry {entry.JournalNumber} posted successfully.");
                 }
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                _logger.LogInformation("Posted journal entry {JournalNumber} with total {TotalDebit:N2}", entry.JournalNumber, totalDebit);
-                return (true, $"Journal entry {entry.JournalNumber} posted successfully.");
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError(ex, "Error posting journal entry {Id}", journalEntryId);
-                return (false, $"Failed to post entry: {ex.Message}");
-            }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Error posting journal entry {Id}", journalEntryId);
+                    return (false, $"Failed to post entry: {ex.Message}");
+                }
+            });
         }
 
         public async Task<(bool Success, string Message, int? NewEntryId)> ReverseJournalEntryAsync(
@@ -336,95 +340,99 @@ namespace VCIIAMS.Web.Services
             DateTime reversalDate,
             string reversedBy)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync<(bool Success, string Message, int? NewEntryId)>(async () =>
             {
-                var original = await _context.JournalEntries
-                    .Include(j => j.Lines)
-                    .FirstOrDefaultAsync(j => j.JournalEntryId == originalEntryId);
-
-                if (original == null)
-                    return (false, "Original journal entry not found.", null);
-
-                if (original.Status != "POSTED")
-                    return (false, "Only POSTED journal entries can be reversed.", null);
-
-                var alreadyReversed = await _context.JournalEntries
-                    .AnyAsync(j => j.ReversalOfJournalEntryId == originalEntryId);
-
-                if (alreadyReversed)
-                    return (false, $"Journal entry {original.JournalNumber} has already been reversed.", null);
-
-                var targetPeriod = await _context.FiscalPeriods.FindAsync(reversalPeriodId);
-                if (targetPeriod == null || targetPeriod.IsClosed)
-                    return (false, "Target reversal fiscal period is closed or invalid.", null);
-
-                // Get or default Reversing Type
-                var reversingType = await _context.JournalEntryTypes
-                    .FirstOrDefaultAsync(t => t.TypeCode == "REVERSING") ?? original.JournalEntryType;
-
-                var newNumber = await GenerateNextJournalNumberAsync();
-
-                var reversalEntry = new JournalEntry
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    JournalNumber = newNumber,
-                    FiscalPeriodId = reversalPeriodId,
-                    EntryDate = reversalDate,
-                    JournalEntryTypeId = reversingType?.JournalEntryTypeId ?? original.JournalEntryTypeId,
-                    SourceModule = original.SourceModule,
-                    SourceReference = $"REV:{original.JournalNumber}",
-                    Description = $"Reversal of {original.JournalNumber}: {original.Description}",
-                    Status = "DRAFT",
-                    TotalDebit = original.TotalCredit,
-                    TotalCredit = original.TotalDebit,
-                    ReversalOfJournalEntryId = original.JournalEntryId,
-                    CreatedBy = reversedBy,
-                    CreatedDate = DateTime.Now
-                };
+                    var original = await _context.JournalEntries
+                        .Include(j => j.Lines)
+                        .FirstOrDefaultAsync(j => j.JournalEntryId == originalEntryId);
 
-                int lineNum = 1;
-                foreach (var line in original.Lines)
-                {
-                    reversalEntry.Lines.Add(new JournalEntryLine
+                    if (original == null)
+                        return (false, "Original journal entry not found.", (int?)null);
+
+                    if (original.Status != "POSTED")
+                        return (false, "Only POSTED journal entries can be reversed.", (int?)null);
+
+                    var alreadyReversed = await _context.JournalEntries
+                        .AnyAsync(j => j.ReversalOfJournalEntryId == originalEntryId);
+
+                    if (alreadyReversed)
+                        return (false, $"Journal entry {original.JournalNumber} has already been reversed.", (int?)null);
+
+                    var targetPeriod = await _context.FiscalPeriods.FindAsync(reversalPeriodId);
+                    if (targetPeriod == null || targetPeriod.IsClosed)
+                        return (false, "Target reversal fiscal period is closed or invalid.", (int?)null);
+
+                    // Get or default Reversing Type
+                    var reversingType = await _context.JournalEntryTypes
+                        .FirstOrDefaultAsync(t => t.TypeCode == "REVERSING") ?? original.JournalEntryType;
+
+                    var newNumber = await GenerateNextJournalNumberAsync();
+
+                    var reversalEntry = new JournalEntry
                     {
-                        LineNumber = lineNum++,
-                        AccountId = line.AccountId,
-                        DepartmentId = line.DepartmentId,
-                        DebitAmount = line.CreditAmount, // Swapped
-                        CreditAmount = line.DebitAmount, // Swapped
-                        Description = $"Reversal: {line.Description}",
-                        ReferenceNumber = line.ReferenceNumber,
+                        JournalNumber = newNumber,
+                        FiscalPeriodId = reversalPeriodId,
+                        EntryDate = reversalDate,
+                        JournalEntryTypeId = reversingType?.JournalEntryTypeId ?? original.JournalEntryTypeId,
+                        SourceModule = original.SourceModule,
+                        SourceReference = $"REV:{original.JournalNumber}",
+                        Description = $"Reversal of {original.JournalNumber}: {original.Description}",
+                        Status = "DRAFT",
+                        TotalDebit = original.TotalCredit,
+                        TotalCredit = original.TotalDebit,
+                        ReversalOfJournalEntryId = original.JournalEntryId,
                         CreatedBy = reversedBy,
                         CreatedDate = DateTime.Now
-                    });
+                    };
+
+                    int lineNum = 1;
+                    foreach (var line in original.Lines)
+                    {
+                        reversalEntry.Lines.Add(new JournalEntryLine
+                        {
+                            LineNumber = lineNum++,
+                            AccountId = line.AccountId,
+                            DepartmentId = line.DepartmentId,
+                            DebitAmount = line.CreditAmount, // Swapped
+                            CreditAmount = line.DebitAmount, // Swapped
+                            Description = $"Reversal: {line.Description}",
+                            ReferenceNumber = line.ReferenceNumber,
+                            CreatedBy = reversedBy,
+                            CreatedDate = DateTime.Now
+                        });
+                    }
+
+                    _context.JournalEntries.Add(reversalEntry);
+
+                    // Mark original as REVERSED
+                    original.Status = "REVERSED";
+                    original.ModifiedBy = reversedBy;
+                    original.ModifiedDate = DateTime.Now;
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    // Post the reversal entry
+                    var postResult = await PostJournalEntryAsync(reversalEntry.JournalEntryId, reversedBy);
+                    if (!postResult.Success)
+                    {
+                        return (true, $"Reversal entry {reversalEntry.JournalNumber} created as draft, but posting failed: {postResult.Message}", reversalEntry.JournalEntryId);
+                    }
+
+                    _logger.LogInformation("Reversed journal entry {Original} with new entry {Reversal}", original.JournalNumber, reversalEntry.JournalNumber);
+                    return (true, $"Journal entry {original.JournalNumber} successfully reversed by {reversalEntry.JournalNumber}.", (int?)reversalEntry.JournalEntryId);
                 }
-
-                _context.JournalEntries.Add(reversalEntry);
-
-                // Mark original as REVERSED
-                original.Status = "REVERSED";
-                original.ModifiedBy = reversedBy;
-                original.ModifiedDate = DateTime.Now;
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                // Post the reversal entry
-                var postResult = await PostJournalEntryAsync(reversalEntry.JournalEntryId, reversedBy);
-                if (!postResult.Success)
+                catch (Exception ex)
                 {
-                    return (true, $"Reversal entry {reversalEntry.JournalNumber} created as draft, but posting failed: {postResult.Message}", reversalEntry.JournalEntryId);
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Error reversing journal entry {Id}", originalEntryId);
+                    return (false, $"Failed to reverse journal entry: {ex.Message}", (int?)null);
                 }
-
-                _logger.LogInformation("Reversed journal entry {Original} with new entry {Reversal}", original.JournalNumber, reversalEntry.JournalNumber);
-                return (true, $"Journal entry {original.JournalNumber} successfully reversed by {reversalEntry.JournalNumber}.", reversalEntry.JournalEntryId);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError(ex, "Error reversing journal entry {Id}", originalEntryId);
-                return (false, $"Failed to reverse journal entry: {ex.Message}", null);
-            }
+            });
         }
 
         public async Task<(bool Success, string Message)> VoidJournalEntryAsync(int journalEntryId, string voidedBy)
