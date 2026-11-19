@@ -4,7 +4,7 @@
 -- Phase 1 & Phase 2 General Ledger Migration Script
 -- ============================================================================
 
-SET NAMES utf8mb4;
+SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------------------------------------------------------
@@ -12,7 +12,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------------------------------------------------------
 CREATE DATABASE IF NOT EXISTS `vciiams`
     CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
+    COLLATE utf8mb4_0900_ai_ci;
 
 USE `vciiams`;
 
@@ -42,7 +42,7 @@ CREATE TABLE `Departments` (
     INDEX `IX_Departments_Active` (`IsActive`),
     CONSTRAINT `FK_Departments_Parent` FOREIGN KEY (`ParentDepartmentId`)
         REFERENCES `Departments` (`DepartmentId`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: Users
@@ -72,7 +72,7 @@ CREATE TABLE `Users` (
     INDEX `IX_Users_Active` (`IsActive`),
     CONSTRAINT `FK_Users_Department` FOREIGN KEY (`DepartmentId`)
         REFERENCES `Departments` (`DepartmentId`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: Roles
@@ -89,7 +89,7 @@ CREATE TABLE `Roles` (
     `ModifiedDate` DATETIME NULL,
     PRIMARY KEY (`RoleId`),
     UNIQUE KEY `UK_Roles_RoleName` (`RoleName`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: UserRoles
@@ -109,7 +109,7 @@ CREATE TABLE `UserRoles` (
         REFERENCES `Users` (`UserId`) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT `FK_UserRoles_Role` FOREIGN KEY (`RoleId`)
         REFERENCES `Roles` (`RoleId`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: AuditLogs
@@ -134,7 +134,7 @@ CREATE TABLE `AuditLogs` (
     INDEX `IX_AuditLogs_Date` (`ActionDate`),
     CONSTRAINT `FK_AuditLogs_User` FOREIGN KEY (`UserId`)
         REFERENCES `Users` (`UserId`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: AccountTypes
@@ -157,7 +157,7 @@ CREATE TABLE `AccountTypes` (
     INDEX `IX_AccountTypes_Category` (`Category`),
     CONSTRAINT `CK_AccountTypes_NormalBalance` CHECK (`NormalBalance` IN ('DEBIT', 'CREDIT')),
     CONSTRAINT `CK_AccountTypes_Category` CHECK (`Category` IN ('ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: ChartOfAccounts
@@ -195,7 +195,7 @@ CREATE TABLE `ChartOfAccounts` (
     CONSTRAINT `FK_ChartOfAccounts_Department` FOREIGN KEY (`DepartmentId`)
         REFERENCES `Departments` (`DepartmentId`) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT `CK_ChartOfAccounts_Level` CHECK (`Level` > 0 AND `Level` <= 10)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: FiscalYears
@@ -221,7 +221,7 @@ CREATE TABLE `FiscalYears` (
     INDEX `IX_FiscalYears_Active` (`IsActive`),
     INDEX `IX_FiscalYears_Closed` (`IsClosed`),
     CONSTRAINT `CK_FiscalYears_Dates` CHECK (`EndDate` > `StartDate`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: FiscalPeriods
@@ -254,7 +254,7 @@ CREATE TABLE `FiscalPeriods` (
         REFERENCES `FiscalYears` (`FiscalYearId`) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT `CK_FiscalPeriods_Dates` CHECK (`EndDate` > `StartDate`),
     CONSTRAINT `CK_FiscalPeriods_Type` CHECK (`PeriodType` IN ('MONTHLY', 'QUARTERLY', 'SEMI-ANNUAL', 'ANNUAL'))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: AccountBalances
@@ -278,7 +278,7 @@ CREATE TABLE `AccountBalances` (
         REFERENCES `ChartOfAccounts` (`AccountId`) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT `FK_AccountBalances_Period` FOREIGN KEY (`FiscalPeriodId`)
         REFERENCES `FiscalPeriods` (`FiscalPeriodId`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: JournalEntryTypes
@@ -297,7 +297,7 @@ CREATE TABLE `JournalEntryTypes` (
     PRIMARY KEY (`JournalEntryTypeId`),
     UNIQUE KEY `UK_JournalEntryTypes_Code` (`TypeCode`),
     INDEX `IX_JournalEntryTypes_Active` (`IsActive`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: JournalEntries
@@ -339,7 +339,7 @@ CREATE TABLE `JournalEntries` (
     CONSTRAINT `CK_JournalEntries_Status` CHECK (`Status` IN ('DRAFT', 'SUBMITTED', 'POSTED', 'REVERSED', 'VOID')),
     CONSTRAINT `CK_JournalEntries_DebitsPositive` CHECK (`TotalDebit` >= 0),
     CONSTRAINT `CK_JournalEntries_CreditsPositive` CHECK (`TotalCredit` >= 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Table: JournalEntryLines
@@ -371,7 +371,7 @@ CREATE TABLE `JournalEntryLines` (
         REFERENCES `Departments` (`DepartmentId`) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT `CK_JournalEntryLines_AmountsPositive` CHECK (`DebitAmount` >= 0 AND `CreditAmount` >= 0),
     CONSTRAINT `CK_JournalEntryLines_DebitOrCredit` CHECK ((`DebitAmount` > 0 AND `CreditAmount` = 0) OR (`CreditAmount` > 0 AND `DebitAmount` = 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------------------------------------------------------
 -- Sequence Simulation Table (Replaces MSSQL seq_JournalEntryNumber)
@@ -381,7 +381,7 @@ CREATE TABLE `JournalEntrySequence` (
     `Id` INT NOT NULL,
     `CurrentValue` BIGINT NOT NULL,
     PRIMARY KEY (`Id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 INSERT INTO `JournalEntrySequence` (`Id`, `CurrentValue`) VALUES (1, 0)
 ON DUPLICATE KEY UPDATE `Id` = `Id`;
