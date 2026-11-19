@@ -12,6 +12,7 @@ namespace VCIIAMS.Web.Data
 
         // Core DbSets
         public DbSet<Department> Departments { get; set; }
+        public DbSet<AuthenticationUser> Users { get; set; }
 
         // Accounting DbSets
         public DbSet<AccountType> AccountTypes { get; set; }
@@ -28,6 +29,12 @@ namespace VCIIAMS.Web.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<AuthenticationUser>(entity =>
+            {
+                entity.ToTable("Users");
+                entity.HasKey(e => e.UserId);
+            });
 
             // ChartOfAccounts configuration
             modelBuilder.Entity<ChartOfAccount>(entity =>

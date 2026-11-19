@@ -218,7 +218,7 @@
 
                     <dt class="col-sm-5">Current User:</dt>
                     <dd class="col-sm-7">
-                        <span class="badge bg-info">Admin</span>
+                        <span class="badge bg-info">@(User.Identity?.Name ?? "Guest")</span>
                     </dd>
 
                     <dt class="col-sm-5">Status:</dt>

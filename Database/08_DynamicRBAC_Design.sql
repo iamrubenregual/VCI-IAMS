@@ -45,10 +45,27 @@ CREATE TABLE IF NOT EXISTS `Users` (
         REFERENCES `Departments` (`DepartmentId`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Upgrade existing Users table if columns are missing
-ALTER TABLE `Users`
-    ADD COLUMN IF NOT EXISTS `LockoutEnd` DATETIME NULL AFTER `IsLocked`,
-    ADD COLUMN IF NOT EXISTS `LastLoginIp` VARCHAR(50) NULL AFTER `LastLoginDate`;
+-- CREATE TABLE IF NOT EXISTS does not upgrade tables from MySQL_Migration.sql.
+-- MySQL 8 does not support ADD COLUMN IF NOT EXISTS.
+SET @sql = IF(
+    EXISTS(SELECT 1 FROM information_schema.columns
+           WHERE table_schema = DATABASE() AND table_name = 'Users' AND column_name = 'LockoutEnd'),
+    'SELECT 1',
+    'ALTER TABLE `Users` ADD COLUMN `LockoutEnd` DATETIME NULL AFTER `IsLocked`'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = IF(
+    EXISTS(SELECT 1 FROM information_schema.columns
+           WHERE table_schema = DATABASE() AND table_name = 'Users' AND column_name = 'LastLoginIp'),
+    'SELECT 1',
+    'ALTER TABLE `Users` ADD COLUMN `LastLoginIp` VARCHAR(50) NULL AFTER `LastLoginDate`'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ----------------------------------------------------------------------------
 -- 1.2 Roles (Enhanced with RoleCode and IsSystemRole)
@@ -70,31 +87,50 @@ CREATE TABLE IF NOT EXISTS `Roles` (
     INDEX `IX_Roles_Active` (`IsActive`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Upgrade existing Roles table if columns are missing
-ALTER TABLE `Roles`
-    ADD COLUMN IF NOT EXISTS `RoleCode` VARCHAR(50) NULL AFTER `RoleId`,
-    ADD COLUMN IF NOT EXISTS `IsSystemRole` BOOLEAN NOT NULL DEFAULT 0 AFTER `Description`;
+-- Existing roles need a nullable RoleCode until their codes are populated below.
+SET @sql = IF(
+    EXISTS(SELECT 1 FROM information_schema.columns
+           WHERE table_schema = DATABASE() AND table_name = 'Roles' AND column_name = 'RoleCode'),
+    'SELECT 1',
+    'ALTER TABLE `Roles` ADD COLUMN `RoleCode` VARCHAR(50) NULL AFTER `RoleId`'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
--- Ensure all existing roles have a unique RoleCode
-UPDATE `Roles`
-SET `RoleCode` = CASE
-    WHEN `RoleName` = 'Super Admin' THEN 'ADMIN'
-    WHEN `RoleName` = 'Finance Director' THEN 'FIN_DIR'
-    WHEN `RoleName` = 'Chief Accountant' THEN 'CHIEF_ACCT'
-    WHEN `RoleName` = 'Senior Accountant' THEN 'SR_ACCT'
-    WHEN `RoleName` = 'Junior Accountant' THEN 'JR_ACCT'
-    WHEN `RoleName` = 'Cashier' THEN 'CASHIER'
-    WHEN `RoleName` = 'Department Head' THEN 'DEPT_HEAD'
-    WHEN `RoleName` = 'Auditor' THEN 'AUDITOR'
-    ELSE UPPER(REPLACE(`RoleName`, ' ', '_'))
-END
-WHERE `RoleCode` IS NULL OR `RoleCode` = '';
+SET @sql = IF(
+    EXISTS(SELECT 1 FROM information_schema.columns
+           WHERE table_schema = DATABASE() AND table_name = 'Roles' AND column_name = 'IsSystemRole'),
+    'SELECT 1',
+    'ALTER TABLE `Roles` ADD COLUMN `IsSystemRole` BOOLEAN NOT NULL DEFAULT 0 AFTER `Description`'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Materialize missing codes and update by primary key, including in safe update mode.
+UPDATE /*+ NO_MERGE(target) */ (
+    SELECT `RoleId` FROM `Roles`
+    WHERE `RoleCode` IS NULL OR `RoleCode` = ''
+) AS target
+STRAIGHT_JOIN `Roles` AS r FORCE INDEX (PRIMARY) ON r.`RoleId` = target.`RoleId`
+SET r.`RoleCode` = CASE
+    WHEN r.`RoleName` = 'Super Admin' THEN 'ADMIN'
+    WHEN r.`RoleName` = 'Finance Director' THEN 'FIN_DIR'
+    WHEN r.`RoleName` = 'Chief Accountant' THEN 'CHIEF_ACCT'
+    WHEN r.`RoleName` = 'Senior Accountant' THEN 'SR_ACCT'
+    WHEN r.`RoleName` = 'Junior Accountant' THEN 'JR_ACCT'
+    WHEN r.`RoleName` = 'Cashier' THEN 'CASHIER'
+    WHEN r.`RoleName` = 'Department Head' THEN 'DEPT_HEAD'
+    WHEN r.`RoleName` = 'Auditor' THEN 'AUDITOR'
+    ELSE UPPER(REPLACE(r.`RoleName`, ' ', '_'))
+END;
 
 -- Add unique index on RoleCode if not present
 SET @uk_roles_code_exists = (
     SELECT COUNT(*)
     FROM information_schema.statistics
-    WHERE table_schema = 'vciiams' AND table_name = 'Roles' AND index_name = 'UK_Roles_RoleCode'
+    WHERE table_schema = DATABASE() AND table_name = 'Roles' AND index_name = 'UK_Roles_RoleCode'
 );
 SET @sql = IF(@uk_roles_code_exists = 0, 'ALTER TABLE `Roles` ADD UNIQUE KEY `UK_Roles_RoleCode` (`RoleCode`);', 'SELECT 1;');
 PREPARE stmt FROM @sql;

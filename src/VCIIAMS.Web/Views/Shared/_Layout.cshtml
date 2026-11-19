@@ -16,7 +16,7 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <a href="/" class="sidebar-brand">
+            <a asp-controller="Home" asp-action="Index" class="sidebar-brand">
                 <i class="bi bi-building"></i>
                 <span class="brand-text">VCI-IAMS</span>
             </a>
@@ -29,7 +29,7 @@
             <ul class="sidebar-menu">
                 <li class="menu-section">MAIN</li>
                 <li>
-                    <a href="/" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
+                    <a asp-controller="Home" asp-action="Index" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">
                         <i class="bi bi-speedometer2"></i>
                         <span class="menu-text">Dashboard</span>
                     </a>
@@ -99,9 +99,18 @@
             <h1 class="page-title">@ViewData["Title"]</h1>
             <div class="top-bar-actions">
                 <div class="user-menu">
-                    <div class="user-avatar">A</div>
-                    <span style="font-weight: 500;">Admin</span>
-                    <i class="bi bi-chevron-down"></i>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="user-avatar">@User.Identity.Name?.Substring(0, 1).ToUpperInvariant()</div>
+                        <span style="font-weight: 500;">@User.Identity.Name</span>
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Sign out</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-outline-primary">Sign in</a>
+                    }
                 </div>
             </div>
         </div>

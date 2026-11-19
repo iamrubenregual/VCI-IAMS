@@ -37,10 +37,8 @@ VCI-IAMS/
 Run the following scripts in SQL Server Management Studio (SSMS) or Azure Data Studio in sequence.
 
 #### 2. Default Admin Credentials
-After running the seed script:
-- **Username**: `admin`
-- **Password**: `Admin@123`
-- **⚠️ CHANGE THIS PASSWORD IMMEDIATELY IN PRODUCTION**
+The default username is `admin`. For MySQL, set its password using the
+password-reset command in the Authentication section below.
 
 ### Features Implemented
 
@@ -61,6 +59,22 @@ After running the seed script:
 ✅ Audit logging for all changes  
 
 ### Running the Application
+
+#### Authentication
+
+The login page uses the MySQL `Users` table and ASP.NET Core Identity password hashes.
+The MySQL migration's original admin seed hash does not match its documented password.
+To set a new password for an existing user, run this from `src/VCIIAMS.Web` with the
+database connection configured:
+
+```powershell
+dotnet run -- --reset-password admin
+```
+
+Enter and confirm a password of at least 12 characters in the interactive terminal.
+Use HTTPS when signing in. Login does not yet restrict access to the dashboard or
+other pages; authorization and permissions are not implemented. Login attempt
+rate limiting and automatic account lockout are not yet implemented.
 
 #### Prerequisites
 - .NET 8.0 SDK
